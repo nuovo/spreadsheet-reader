@@ -97,14 +97,14 @@
 
 			if (!$this -> Type)
 			{
-				if (substr($Filepath, -5) == '.xlsx' || substr($Filepath, -5) == '.xltx')
+				if (substr($OriginalFilename, -5) == '.xlsx' || substr($OriginalFilename, -5) == '.xltx')
 				{
 					$this -> Type = self::TYPE_XLSX;
 					$Extension = '.xlsx';
 				}
 				else
 				{
-					$Extension = substr($Filepath, -4);
+					$Extension = substr($OriginalFilename, -4);
 				}
 
 				if ($Extension == '.xls' || $Extension == '.xlt')
@@ -115,7 +115,7 @@
 				{
 					$this -> Type = self::TYPE_ODS;
 				}
-				else
+				elseif (!$this -> Type)
 				{
 					// If type cannot be determined, try parsing as CSV, it might just be a text file
 					$this -> Type = self::TYPE_CSV;
