@@ -164,7 +164,7 @@
 			{
 				return false;
 			}
-			return ($this -> Index < $this -> Handle -> sheets[0]['numRows']);
+			return ($this -> Index <= $this -> Handle -> sheets[0]['numRows']);
 		}
 
 		// !Countable interface method
