@@ -6,7 +6,9 @@ So far XLSX and text/CSV file parsing should be memory-efficient. XLS file parsi
 *  PHP 5.3.0 or newer
 *  PHP must have Zip file support (see http://php.net/manual/en/zip.installation.php)
 
-Usage is very simple:
+### Usage:
+
+Very simple:
 
 	<?php
 		// If you need to parse XLS files, include php-excel-reader
