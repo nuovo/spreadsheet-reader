@@ -2,27 +2,27 @@ Nuovo/Nouveau spreadsheet-reader is a PHP spreadsheet reader with the difference
 
 So far XLSX and text/CSV file parsing should be memory-efficient. XLS file parsing is done with php-excel-reader from http://code.google.com/p/php-excel-reader/ which, sadly, has memory issues with bigger spreadsheets.
 
-Requirements:
-- PHP 5.3.0 or newer
-- PHP must have Zip file support (see http://php.net/manual/en/zip.installation.php)
+### Requirements:
+*  PHP 5.3.0 or newer
+*  PHP must have Zip file support (see http://php.net/manual/en/zip.installation.php)
 
 Usage is very simple:
 
-<?php
-	// If you need to parse XLS files, include php-excel-reader
-	require('php-excel-reader/excel_reader.php');
+	<?php
+		// If you need to parse XLS files, include php-excel-reader
+		require('php-excel-reader/excel_reader.php');
+	
+		require('SpreadsheetReader.php');
+	
+		$Reader = new SpreadsheetReader('example.xlsx');
+		foreach ($Reader as $Row)
+		{
+			print_r($Row);
+		}
+	?>
 
-	require('SpreadsheetReader.php');
-
-	$Reader = new SpreadsheetReader('example.xlsx');
-	foreach ($Reader as $Row)
-	{
-		print_r($Row);
-	}
-?>
-
-TODOs:
-- Add support for ODS spreadsheets;
-- XLSX XML parsing suffers from an occasional Shliemel the painter moment (sharedStrings.xml)
+### TODOs:
+*  Add support for ODS spreadsheets;
+*  XLSX XML parsing suffers from an occasional Shliemel the painter moment (sharedStrings.xml)
 
 http://www.nuovo.lv
