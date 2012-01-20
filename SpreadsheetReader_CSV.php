@@ -49,14 +49,14 @@
 			$BOM16 = bin2hex(fread($this -> Handle, 2));
 			if ($BOM16 == 'fffe')
 			{
-				//$this -> Encoding = 'UTF-16LE';
-				$this -> Encoding = 'UTF-16';
+				$this -> Encoding = 'UTF-16LE';
+				//$this -> Encoding = 'UTF-16';
 				$this -> BOMLength = 2;
 			}
 			elseif ($BOM16 == 'feff')
 			{
-				//$this -> Encoding = 'UTF-16BE';
-				$this -> Encoding = 'UTF-16';
+				$this -> Encoding = 'UTF-16BE';
+				//$this -> Encoding = 'UTF-16';
 				$this -> BOMLength = 2;
 			}
 
@@ -95,19 +95,28 @@
 			// Checking for the delimiter if it should be determined automatically
 			if (!$this -> Options['Delimiter'])
 			{
+				//$Semicolon = mb_convert_encoding(';', $this -> Encoding, 'UTF-8');
+				//$Tab = mb_convert_encoding("\t", $this -> Encoding, 'UTF-8');
+				//$Comma = mb_convert_encoding(',', $this -> Encoding, 'UTF-8');
+
+				// fgetcsv needs single-byte separators
+				$Semicolon = ';';
+				$Tab = "\t";
+				$Comma = ',';
+
 				// Reading the first row and checking if a specific separator character
 				// has more columns than others (it means that most likely that is the delimiter).
-				$SemicolonCount = count(fgetcsv($this -> Handle, null, ';'));
+				$SemicolonCount = count(fgetcsv($this -> Handle, null, $Semicolon));
 				fseek($this -> Handle, $this -> BOMLength);
-				$TabCount = count(fgetcsv($this -> Handle, null, "\t"));
+				$TabCount = count(fgetcsv($this -> Handle, null, $Tab));
 				fseek($this -> Handle, $this -> BOMLength);
-				$CommaCount = count(fgetcsv($this -> Handle, null, ','));
+				$CommaCount = count(fgetcsv($this -> Handle, null, $Comma));
 				fseek($this -> Handle, $this -> BOMLength);
 
-				$Delimiter = ';';
+				$Delimiter = $Semicolon;
 				if ($TabCount > $SemicolonCount || $CommaCount > $SemicolonCount)
 				{
-					$Delimiter = $CommaCount > $TabCount ? ',' : "\t";
+					$Delimiter = $CommaCount > $TabCount ? $Comma : $Tab;
 				}
 
 				$this -> Options['Delimiter'] = $Delimiter;
@@ -147,10 +156,38 @@
 		 */ 
 		public function next()
 		{
-			$this -> Index++;
-			//echo ftell($this -> Handle)."\n"; exit;
-			$this -> CurrentRow = fgetcsv($this -> Handle, null, $this -> Options['Delimiter'], $this -> Options['Enclosure']);
+			// Finding the place the next line starts for UTF-16 encoded files
+			// Line breaks could be 0x0D 0x00 0x0A 0x00 and PHP could split lines on the
+			//	first or the second linebreak leaving unnecessary \0 characters that mess up
+			//	the output.
+			if ($this -> Encoding == 'UTF-16LE' || $this -> Encoding == 'UTF-16BE')
+			{
+				while (!feof($this -> Handle))
+				{
+					// While bytes are insignificant whitespace, do nothing
+					$Char = ord(fgetc($this -> Handle));
+					if (!$Char || $Char == 10 || $Char == 13)
+					{
+						continue;
+					}
+					else
+					{
+						// When significant bytes are found, step back to the last place before them
+						if ($this -> Encoding == 'UTF-16LE')
+						{
+							fseek($this -> Handle, ftell($this -> Handle) - 1);
+						}
+						else
+						{
+							fseek($this -> Handle, ftell($this -> Handle) - 2);
+						}
+						break;
+					}
+				}
+			}
 
+			$this -> Index++;
+			$this -> CurrentRow = fgetcsv($this -> Handle, null, $this -> Options['Delimiter'], $this -> Options['Enclosure']);
 
 			if ($this -> CurrentRow)
 			{
@@ -162,11 +199,12 @@
 					$Encoding = $this -> Encoding;
 					foreach ($this -> CurrentRow as $Key => $Value)
 					{
-						$this -> CurrentRow[$Key] = trim(
-							mb_convert_encoding($V, 'UTF-8', $this -> Encoding),
+						$this -> CurrentRow[$Key] = trim(trim(
+							mb_convert_encoding($Value, 'UTF-8', $this -> Encoding),
 							$this -> Options['Enclosure']
-						);
+						));
 					}
+
 				}
 			}
 

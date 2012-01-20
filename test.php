@@ -28,7 +28,7 @@
 	foreach ($Spreadsheet as $Key => $Row)
 	{
 		echo $Key.': ';
-		print_R($Row);
+		var_dump($Row);
 		$CurrentMem = memory_get_usage();
 
 		echo ($CurrentMem - $BaseMem).' current, '.$CurrentMem." base\n";
