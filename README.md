@@ -23,6 +23,12 @@ Very simple:
 		}
 	?>
 
+### Testing
+
+From the command line:
+
+	php test.php path-to-spreadsheet.xls
+
 ### TODOs:
 *  Add support for ODS spreadsheets;
 *  XLSX XML parsing suffers from an occasional Shliemel the painter moment (sharedStrings.xml)
