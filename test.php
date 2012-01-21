@@ -9,7 +9,7 @@
 	}
 	else
 	{
-		echo 'Please specify filename as the first argument'."\n";
+		echo 'Please specify filename as the first argument'.PHP_EOL;
 		exit;
 	}
 
@@ -28,20 +28,28 @@
 	foreach ($Spreadsheet as $Key => $Row)
 	{
 		echo $Key.': ';
-		var_dump($Row);
+		if ($Row)
+		{
+			print_r($Row);
+		}
+		else
+		{
+			var_dump($Row);
+		}
 		$CurrentMem = memory_get_usage();
 
-		echo ($CurrentMem - $BaseMem).' current, '.$CurrentMem." base\n";
-		echo '---------------------------------'."\n";
+		echo ($CurrentMem - $BaseMem).' current, '.$CurrentMem.' base'.PHP_EOL;
+		echo '---------------------------------'.PHP_EOL;
 
 		if ($Key && ($Key % 500 == 0))
 		{
-			echo '---------------------------------'."\n";
+			echo '---------------------------------'.PHP_EOL;
 			echo 'Time: '.(microtime(true) - $Time);
-			echo '---------------------------------'."\n";
+			echo '---------------------------------'.PHP_EOL;
 		}
 	}
 
-	echo "\n".'---------------------------------'."\n";
+	echo PHP_EOL.'---------------------------------'.PHP_EOL;
 	echo 'Time: '.(microtime(true) - $Time);
+	echo PHP_EOL;
 ?>

@@ -27,7 +27,7 @@
 		/**
 		 * @var SpreadsheetReader_* Handle for the reader object
 		 */
-		private $Handle = false;
+		private $Handle = array();
 
 		/**
 		 * @var TYPE_* Type of the contained spreadsheet
@@ -157,6 +157,10 @@
 				case self::TYPE_XLS:
 					// Everything already happens above
 					break;
+				case self::TYPE_ODS:
+					self::Load(self::TYPE_ODS);
+					$this -> Handle = new SpreadsheetReader_ODS($Filepath, $this -> Options);
+					break;
 			}
 		}
 
@@ -187,7 +191,10 @@
 		public function rewind()
 		{
 			$this -> Index = 0;
-			$this -> Handle -> rewind();
+			if ($this -> Handle)
+			{
+				$this -> Handle -> rewind();
+			}
 		}
 
 		/** 
@@ -198,7 +205,11 @@
 		 */
 		public function current()
 		{
-			return $this -> Handle -> current();
+			if ($this -> Handle)
+			{
+				return $this -> Handle -> current();
+			}
+			return null;
 		}
 
 		/** 
@@ -207,9 +218,13 @@
 		 */ 
 		public function next()
 		{
-			$this -> Index++;
+			if ($this -> Handle)
+			{
+				$this -> Index++;
 
-			return $this -> Handle -> next();
+				return $this -> Handle -> next();
+			}
+			return null;
 		}
 
 		/** 
@@ -220,7 +235,11 @@
 		 */ 
 		public function key()
 		{
-			return $this -> Handle -> key();
+			if ($this -> Handle)
+			{
+				return $this -> Handle -> key();
+			}
+			return null;
 		}
 
 		/** 
@@ -231,13 +250,21 @@
 		 */ 
 		public function valid()
 		{
-			return $this -> Handle -> valid();
+			if ($this -> Handle)
+			{
+				return $this -> Handle -> valid();
+			}
+			return false;
 		}
 
 		// !Countable interface method
 		public function count()
 		{
-			return $this -> Handle -> count();
+			if ($this -> Handle)
+			{
+				return $this -> Handle -> count();
+			}
+			return 0;
 		}
 	}
 ?>

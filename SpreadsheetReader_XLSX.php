@@ -304,36 +304,27 @@
 		 */
 		public function __destruct()
 		{
-			if (file_exists($this -> WorksheetPath))
-			{
-				@unlink($this -> WorksheetPath);
-				unset($this -> WorksheetPath);
-			}
 			if ($this -> Worksheet && $this -> Worksheet instanceof XMLReader)
 			{
 				$this -> Worksheet -> close();
 				unset($this -> Worksheet);
 			}
-
-			if (file_exists($this -> SharedStringsPath))
+			if (file_exists($this -> WorksheetPath))
 			{
-				@unlink($this -> SharedStringsPath);
-				unset($this -> SharedStringsPath);
+				@unlink($this -> WorksheetPath);
+				unset($this -> WorksheetPath);
 			}
+
 			if ($this -> SharedStrings && $this -> SharedStrings instanceof XMLReader)
 			{
 				$this -> SharedStrings -> close();
 				unset($this -> SharedStrings);
 			}
-		}
-
-		public function __get($Name)
-		{
-			if ($Name == 'Type')
+			if (file_exists($this -> SharedStringsPath))
 			{
-				return $this -> Type;
+				@unlink($this -> SharedStringsPath);
+				unset($this -> SharedStringsPath);
 			}
-			return null;
 		}
 
 		/**
@@ -777,6 +768,8 @@
 				$this -> Worksheet -> close();
 				$this -> Worksheet -> open($this -> WorksheetPath);
 				$this -> Valid = true;
+
+				$this -> RowOpen = false;
 			}
 
 			$this -> Index = 0;
