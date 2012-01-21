@@ -81,7 +81,7 @@
 			}
 			if (file_exists($this -> ContentPath))
 			{
-				//@unlink($this -> ContentPath);
+				@unlink($this -> ContentPath);
 				unset($this -> ContentPath);
 			}
 		}
