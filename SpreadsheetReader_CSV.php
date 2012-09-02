@@ -95,10 +95,6 @@
 			// Checking for the delimiter if it should be determined automatically
 			if (!$this -> Options['Delimiter'])
 			{
-				//$Semicolon = mb_convert_encoding(';', $this -> Encoding, 'UTF-8');
-				//$Tab = mb_convert_encoding("\t", $this -> Encoding, 'UTF-8');
-				//$Comma = mb_convert_encoding(',', $this -> Encoding, 'UTF-8');
-
 				// fgetcsv needs single-byte separators
 				$Semicolon = ';';
 				$Tab = "\t";
