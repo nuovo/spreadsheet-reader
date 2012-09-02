@@ -86,29 +86,6 @@
 			}
 		}
 
-		private function ReadODS($Filepath)
-		{
-			$Rows = $Sheet -> children('urn:oasis:names:tc:opendocument:xmlns:office:1.0') -> body -> spreadsheet ->
-				children('urn:oasis:names:tc:opendocument:xmlns:table:1.0') -> table -> {'table-row'};
-
-			$Content = array();
-
-			foreach ($Rows as $Row)
-			{
-				$RowContent = array();
-
-				$Cells = $Row -> {'table-cell'};
-				foreach ($Cells as $Cell)
-				{
-					$RowContent[] = (string)$Cell -> children('urn:oasis:names:tc:opendocument:xmlns:text:1.0') -> p;
-				}
-
-				$Content[] = $RowContent;
-			}
-
-			return $Content;
-		}
-
 		// !Iterator interface methods
 		/** 
 		 * Rewind the Iterator to the first element.
