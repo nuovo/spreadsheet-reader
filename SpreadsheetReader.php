@@ -2,9 +2,9 @@
 /**
  * Main class for spreadsheet reading
  * TODO:
- * - ODS support
  * - XLSX XML parsing suffers from a Shliemel the painter problem (sharedStrings.xml)
  *
+ * @version 0.3.1
  * @author Martins Pilsetnieks
  */
 	class SpreadsheetReader implements Iterator, Countable
@@ -122,7 +122,7 @@
 				}
 			}
 
-			// Pre-checking XLS files, in case they are renamed CSV
+			// Pre-checking XLS files, in case they are renamed CSV or XLSX files
 			if ($this -> Type == self::TYPE_XLS)
 			{
 				self::Load(self::TYPE_XLS);
