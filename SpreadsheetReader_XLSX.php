@@ -949,12 +949,13 @@
 			$Result = 0;
 			for ($i = strlen($Letter) - 1, $j = 0; $i >= 0; $i--, $j++)
 			{
-				$Ord = ord($Letter) - 64;
+				$Char = substr( $Letter, $i, 1);
+				$Ord = ord($Char) - 64;
 				if ($Ord > 26)
 				{
 					// If not uppercase, assuming lowercase, converting
-					$Letter = strtoupper($Letter);
-					$Ord = ord($Letter) - 64;
+					$Char = strtoupper($Char);
+					$Ord = ord($Char) - 64;
 
 					if ($Ord > 26)
 					{
