@@ -946,21 +946,16 @@
 		{
 			$Powers = array();
 
+			$Letter = strtoupper($Letter);
+
 			$Result = 0;
 			for ($i = strlen($Letter) - 1, $j = 0; $i >= 0; $i--, $j++)
 			{
-				$Ord = ord($Letter) - 64;
+				$Ord = ord($Letter[$i]) - 64;
 				if ($Ord > 26)
 				{
-					// If not uppercase, assuming lowercase, converting
-					$Letter = strtoupper($Letter);
-					$Ord = ord($Letter) - 64;
-
-					if ($Ord > 26)
-					{
-						// Something is very, very wrong
-						return false;
-					}
+					// Something is very, very wrong
+					return false;
 				}
 				$Result += $Ord * pow(26, $j);
 			}
