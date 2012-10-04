@@ -417,6 +417,8 @@
 				}
 			}
 
+			$Value = '';
+
 			// Extract the value from the shared string
 			if ($this -> SSOpen && ($this -> SharedStringIndex == $Index))
 			{
@@ -429,14 +431,13 @@
 							{
 								continue;
 							}
-
-							$this -> LastSharedStringValue = $this -> SharedStrings -> readString();
-							return $this -> LastSharedStringValue;
+							$Value .= $this -> SharedStrings -> readString();
 							break;
 						case 'si':
 							if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
 							{
 								$this -> SSOpen = false;
+								$this -> SSForwarded = true;
 								break 2;
 							}
 							break;
@@ -444,7 +445,11 @@
 				}
 			}
 
-			return '';
+			if ($Value)
+			{
+				$this -> LastSharedStringValue = $Value;
+			}
+			return $Value;
 		}
 
 		/**
@@ -587,7 +592,7 @@
 					}
 					else
 					{
-						$Format['Code'] = str_replace('\#', '', $Format['Code']);
+						$Format['Code'] = str_replace('#', '', $Format['Code']);
 
 						$Matches = array();
 						if (preg_match('{(0+)(\.?)(0*)}', preg_replace('{\[[^\]]+\]}', '', $Format['Code']), $Matches))
@@ -621,6 +626,7 @@
 
 						$Format['Currency'] = $CurrCode;
 					}
+					$Format['Code'] = trim($Format['Code']);
 				}
 
 				$this -> ParsedFormatCache[$Index] = $Format;
@@ -857,7 +863,8 @@
 							// Determine cell type and get value
 							if ($this -> Worksheet -> getAttribute('t') == self::CELL_TYPE_SHARED_STR)
 							{
-								$Value = $this -> GetSharedString($this -> Worksheet -> readString());
+								$SharedStringIndex = $this -> Worksheet -> readString();
+								$Value = $this -> GetSharedString($SharedStringIndex);
 							}
 							else
 							{
