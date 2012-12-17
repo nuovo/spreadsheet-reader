@@ -185,6 +185,12 @@
 							{
 								$LastCellContent = '';
 								$this -> CurrentRow[] = '';
+								if($this->Content->getAttribute('table:number-columns-repeated')!=null){                                                                                                                                  
+                                   					$repeat = $this->Content->getAttribute('table:number-columns-repeated');
+                                    					for($i=0;$i<$repeat-1;$i++){
+                                        					$this -> CurrentRow[] = '';
+                             						}
+                        					}
 							}
 							else
 							{
