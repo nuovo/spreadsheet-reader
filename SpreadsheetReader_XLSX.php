@@ -839,7 +839,7 @@
 				}
 				else
 				{
-					$this -> CurrentRow = [];
+					$this -> CurrentRow = array();
 				}
 
 				// These two are needed to control for empty cells
