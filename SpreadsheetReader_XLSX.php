@@ -833,7 +833,14 @@
 			// Reading the necessary row, if found
 			if ($this -> RowOpen)
 			{
-				$this -> CurrentRow = array_fill(0, $CurrentRowColumnCount, '');
+				if ($CurrentRowColumnCount > 0)
+				{
+					$this -> CurrentRow = array_fill(0, $CurrentRowColumnCount, '');
+				}
+				else
+				{
+					$this -> CurrentRow = [];
+				}
 
 				// These two are needed to control for empty cells
 				$MaxIndex = 0;

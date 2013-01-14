@@ -1,7 +1,6 @@
 <?php
 /**
  * XLS parsing uses php-excel-reader from http://code.google.com/p/php-excel-reader/
- * The latest version, 2.21, didn't work for me but 2.2 was just fine
  */
 	if (isset($argv[1]))
 	{
@@ -15,7 +14,6 @@
 
 	// Excel reader from http://code.google.com/p/php-excel-reader/
 	require('php-excel-reader/excel_reader2.php');
-
 	require('SpreadsheetReader.php');
 
 	date_default_timezone_set('UTC');

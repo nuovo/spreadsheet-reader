@@ -177,14 +177,29 @@
 					switch ($this -> Content -> name)
 					{
 						case 'table:table-cell':
-							if ($this -> Content -> nodeType == XMLReader::END_ELEMENT)
+							if ($this -> Content -> nodeType == XMLReader::END_ELEMENT || $this -> Content -> isEmptyElement)
 							{
+								if ($this -> Content -> nodeType == XMLReader::END_ELEMENT)
+								{
+									$CellValue = $LastCellContent;
+								}
+								elseif ($this -> Content -> isEmptyElement)
+								{
+									$LastCellContent = '';
+									$CellValue = $LastCellContent;
+								}
+
 								$this -> CurrentRow[] = $LastCellContent;
-							}
-							elseif ($this -> Content -> isEmptyElement)
-							{
-								$LastCellContent = '';
-								$this -> CurrentRow[] = '';
+
+								if ($this -> Content -> getAttribute('table:number-columns-repeated') !== null)
+								{                                                                                            
+									$RepeatedColumnCount = $this -> Content -> getAttribute('table:number-columns-repeated');
+									// Checking if larger than one because the value is already added to the row once before
+									if ($RepeatedColumnCount > 1)
+									{
+										$this -> CurrentRow = array_pad($this -> CurrentRow, count($this -> CurrentRow) + $RepeatedColumnCount - 1, '');
+									}
+								}
 							}
 							else
 							{
