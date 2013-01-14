@@ -4,7 +4,7 @@
  * TODO:
  * - XLSX XML parsing suffers from a Shliemel the painter problem (sharedStrings.xml)
  *
- * @version 0.3.2
+ * @version 0.3.3
  * @author Martins Pilsetnieks
  */
 	class SpreadsheetReader implements Iterator, Countable
