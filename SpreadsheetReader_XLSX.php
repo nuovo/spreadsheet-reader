@@ -48,6 +48,11 @@
 		 * @var XMLReader XML reader object for the shared strings XML file
 		 */
 		private $SharedStrings = false;
+                
+		/**
+		 * @var Array for rewinded shared strings
+		 */
+		private $SharedStringsCache = array();
 
 		// Style data
 		/**
@@ -231,6 +236,7 @@
 			}
 
 			$Zip -> close();
+                        
 
 			if ($this -> WorksheetPath && is_readable($this -> WorksheetPath))
 			{
@@ -240,8 +246,7 @@
 			}
 			if ($this -> SharedStringsPath && is_readable($this -> SharedStringsPath))
 			{
-				$this -> SharedStrings = new XMLReader;
-				$this -> SharedStrings -> open($this -> SharedStringsPath);
+				$this->PrepareShared();
 			}
 
 			// If worksheet is present and is OK, parse the styles already
@@ -315,15 +320,47 @@
 				unset($this -> WorksheetPath);
 			}
 
-			if ($this -> SharedStrings && $this -> SharedStrings instanceof XMLReader)
+			if ($this -> SharedStrings)
 			{
-				$this -> SharedStrings -> close();
-				unset($this -> SharedStrings);
+				fclose($this -> SharedStrings);
+				unset($this -> SharedStringsCache);
 			}
 			if (file_exists($this -> SharedStringsPath))
 			{
 				@unlink($this -> SharedStringsPath);
 				unset($this -> SharedStringsPath);
+			}
+		}
+		
+		/**
+		 * Indexes shared strings
+		 * saves byte offsets for strings
+		 */
+		private function PrepareShared() {
+			
+			$this -> SharedStrings = fopen($this -> SharedStringsPath,'r');
+			
+			$offset = 0;
+			$line = '';
+			$first=true;
+			$cnt=0;
+			while (!feof($this -> SharedStrings)) {
+				$line .= fread($this -> SharedStrings, $first?1000:997);
+				if ($first) {
+					$first = false;
+					if (preg_match('/uniqueCount="(\d*?)"/', $line,$r))
+						$this->SharedStringsCache = new SplFixedArray($r[1]);
+					else die('Count not found :(');
+				}
+
+				for ($i=0;$i<997;$i++) {
+					if (substr($line,$i,3) == '<t>') {
+						$this->SharedStringsCache[$cnt] = (int)$offset+$i+3;
+						$cnt++;
+					}
+				}
+				$line = substr($line,-3);
+				$offset+=997;
 			}
 		}
 
@@ -336,120 +373,15 @@
 		 */
 		private function GetSharedString($Index)
 		{
-			// If the desired index is before the current, rewind the XML
-			if ($this -> SharedStringIndex > $Index)
-			{
-				$this -> SSOpen = false;
-				$this -> SharedStrings -> close();
-				$this -> SharedStrings -> open($this -> SharedStringsPath);
-				$this -> SharedStringIndex = 0;
-				$this -> LastSharedStringValue = null;
-				$this -> SSForwarded = false;
-			}
 
-			// Finding the unique string count (if not already read)
-			if ($this -> SharedStringIndex == 0 && !$this -> SharedStringCount)
-			{
-				while ($this -> SharedStrings -> read())
-				{
-					if ($this -> SharedStrings -> name == 'sst')
-					{
-						$this -> SharedStringCount = $this -> SharedStrings -> getAttribute('uniqueCount');
-						break;
-					}
+			if (isset($this->SharedStringsCache[$Index])) {
+				$f = fseek($this->SharedStrings,$this->SharedStringsCache[$Index]);
+				$Value = '';
+				while (strpos($Value,'</t>')===false) {
+					$Value .= fread($this->SharedStrings, 1024);
 				}
-			}
-
-			// If index of the desired string is larger than possible, don't even bother.
-			if ($this -> SharedStringCount && ($Index >= $this -> SharedStringCount))
-			{
-				return '';
-			}
-
-			// If an index with the same value as the last already fetched is requested
-			// (any further traversing the tree would get us further away from the node)
-			if (($Index == $this -> SharedStringIndex) && ($this -> LastSharedStringValue !== null))
-			{
-				return $this -> LastSharedStringValue;
-			}
-
-			// Find the correct <si> node with the desired index
-			while ($this -> SharedStringIndex <= $Index)
-			{
-				// SSForwarded is set further to avoid double reading in case nodes are skipped.
-				if ($this -> SSForwarded)
-				{
-					$this -> SSForwarded = false;
-				}
-				else
-				{
-					$ReadStatus = $this -> SharedStrings -> read();
-					if (!$ReadStatus)
-					{
-						break;
-					}
-				}
-
-				if ($this -> SharedStrings -> name == 'si')
-				{
-					if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
-					{
-						$this -> SSOpen = false;
-						$this -> SharedStringIndex++;
-					}
-					else
-					{
-						$this -> SSOpen = true;
-	
-						if ($this -> SharedStringIndex < $Index)
-						{
-							$this -> SSOpen = false;
-							$this -> SharedStrings -> next('si');
-							$this -> SSForwarded = true;
-							$this -> SharedStringIndex++;
-							continue;
-						}
-						else
-						{
-							break;
-						}
-					}
-				}
-			}
-
-			$Value = '';
-
-			// Extract the value from the shared string
-			if ($this -> SSOpen && ($this -> SharedStringIndex == $Index))
-			{
-				while ($this -> SharedStrings -> read())
-				{
-					switch ($this -> SharedStrings -> name)
-					{
-						case 't':
-							if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
-							{
-								continue;
-							}
-							$Value .= $this -> SharedStrings -> readString();
-							break;
-						case 'si':
-							if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
-							{
-								$this -> SSOpen = false;
-								$this -> SSForwarded = true;
-								break 2;
-							}
-							break;
-					}
-				}
-			}
-
-			if ($Value)
-			{
-				$this -> LastSharedStringValue = $Value;
-			}
-			return $Value;
+				return substr($Value,0,strpos($Value,'</t>'));
+			} else return '';
 		}
 
 		/**
@@ -732,7 +664,7 @@
 						// Scaling
 						$Value = $Value / $Format['Scale'];
 
-						if ($Format['MinWidth'] && $Format['Decimals'])
+						if (!empty($Format['MinWidth']) && $Format['Decimals'])
 						{
 							if ($Format['Thousands'])
 							{
