@@ -42,4 +42,7 @@ From the command line:
 ### TODOs:
 *  ODS date formats;
 
+### Licensing
+All of the code in this library is licensed under the MIT license as included in the LICENSE file, however, for now the library relies on php-excel-reader library for XLS file parsing which is licensed under the PHP license.
+
 http://www.nuovo.lv
