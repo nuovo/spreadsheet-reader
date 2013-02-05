@@ -29,8 +29,17 @@ From the command line:
 
 	php test.php path-to-spreadsheet.xls
 
+### Notes about library performance
+*  CSV and text files are read strictly sequentially so performance should be O(n);
+*  When parsing XLS files, all of the file content is read into memory so large XLS files can lead to "out of memory" errors;
+*  XLSX files use so called "shared strings" internally to optimize for cases where the same string is repeated multiple times.
+	Internally XLSX is an XML text that is parsed sequentially to extract data from it, however, in some cases these shared strings are a problem -
+	sometimes Excel may put all, or nearly all of the strings from the spreadsheet in the shared string file (which is a separate XML text), and not necessarily in the same
+	order. Worst case scenario is when it is in reverse order - for each string we need to parse the shared string XML from the beginning, if we want to avoid keeping the data in memory.
+	To that end, the XLSX parser has a cache for shared strings that is used if the total shared string count is not too high. In case you get out of memory errors, you can
+	try adjusting the *SHARED_STRING_CACHE_LIMIT* constant in SpreadsheetReader_XLSX to a lower one.
+
 ### TODOs:
 *  ODS date formats;
-*  XLSX XML parsing suffers from an occasional Shliemel the painter moment (sharedStrings.xml)
 
 http://www.nuovo.lv
