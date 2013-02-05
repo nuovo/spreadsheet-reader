@@ -13,6 +13,15 @@
 		const CELL_TYPE_STR = 'str';
 		const CELL_TYPE_INLINE_STR = 'inlineStr';
 
+		/**
+		 * Number of shared strings that can be reasonably cached, i.e., that aren't read from file but stored in memory.
+		 *	If the total number of shared strings is higher than this, caching is not used.
+		 *	If this value is null, shared strings are cached regardless of amount.
+		 *	With large shared string caches there are huge performance gains, however a lot of memory could be used which
+		 *	can be a problem, especially on shared hosting.
+		 */
+		const SHARED_STRING_CACHE_LIMIT = 50000;
+
 		private $Options = array(
 			'TempDir' => '',
 			'ReturnDateTimeObjects' => false
@@ -48,6 +57,10 @@
 		 * @var XMLReader XML reader object for the shared strings XML file
 		 */
 		private $SharedStrings = false;
+		/**
+		 * @var array Shared strings cache, if the number of shared strings is low enough
+		 */
+		private $SharedStringCache = array();
 
 		// Style data
 		/**
@@ -242,6 +255,7 @@
 			{
 				$this -> SharedStrings = new XMLReader;
 				$this -> SharedStrings -> open($this -> SharedStringsPath);
+				$this -> PrepareSharedStringCache();
 			}
 
 			// If worksheet is present and is OK, parse the styles already
@@ -328,6 +342,53 @@
 		}
 
 		/**
+		 * Creating shared string cache if the number of shared strings is acceptably low (or there is no limit on the amount
+		 */
+		private function PrepareSharedStringCache()
+		{
+			$SharedStringCount = 0;
+			while ($this -> SharedStrings -> read())
+			{
+				if ($this -> SharedStrings -> name == 'sst')
+				{
+					$SharedStringCount = $this -> SharedStrings -> getAttribute('count');
+					break;
+				}
+			}
+
+			if (!$SharedStringCount || (self::SHARED_STRING_CACHE_LIMIT < $SharedStringCount && self::SHARED_STRING_CACHE_LIMIT !== null))
+			{
+				return false;
+			}
+
+			$CacheIndex = 0;
+			$CacheValue = '';
+			while ($this -> SharedStrings -> read())
+			{
+				switch ($this -> SharedStrings -> name)
+				{
+					case 'si':
+						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+						{
+							$this -> SharedStringCache[$CacheIndex] = $CacheValue;
+							$CacheIndex++;
+							$CacheValue = '';
+						}
+						break;
+					case 't':
+						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+						{
+							continue;
+						}
+						$CacheValue .= $this -> SharedStrings -> readString();
+						break;
+				}
+			}
+
+			return true;
+		}
+
+		/**
 		 * Retrieves a shared string value by its index
 		 *
 		 * @param int Shared string index
@@ -336,6 +397,18 @@
 		 */
 		private function GetSharedString($Index)
 		{
+			if ((self::SHARED_STRING_CACHE_LIMIT === null || self::SHARED_STRING_CACHE_LIMIT > 0) && ($this -> SharedStringCache !== null))
+			{
+				if (isset($this -> SharedStringCache[$Index]))
+				{
+					return $this -> SharedStringCache[$Index];
+				}
+				else
+				{
+					return '';
+				}
+			}
+
 			// If the desired index is before the current, rewind the XML
 			if ($this -> SharedStringIndex > $Index)
 			{
