@@ -54,6 +54,12 @@
 
 			$this -> Handle = new Spreadsheet_Excel_Reader;
 			$this -> Handle -> setOutputEncoding('UTF-8');
+
+			if (function_exists('mb_convert_encoding'))
+			{
+				$this -> Handle -> setUTFEncoder('mb');
+			}
+
 			$this -> Handle -> read($Filepath);
 			if (empty($this -> Handle -> sheets))
 			{
