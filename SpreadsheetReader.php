@@ -161,7 +161,76 @@
 					break;
 			}
 		}
-
+		
+		//--------------------------------------- Tobbi Filteau ---------------------------
+		/**
+		* Loads the named worksheet, only works for XLSX files so far
+		*/
+		
+		public function loadWorksheetByName($name)
+		{
+			if(self::TYPE_XLSX)
+			{
+				$this -> Handle -> loadWorksheetByName($name);
+				return true;
+			}
+			else
+				return false;
+		}
+		
+		/**
+		* Loads the worksheet by Id, only works for XLSX files so far
+		*/
+		
+		public function loadWorksheetById($wsId = 1)
+		{
+			if(self::TYPE_XLSX)
+			{
+				$this -> Handle -> loadWorksheetById($wsId);
+				return true;
+			}
+			else
+				return false;
+		}
+		
+		/**
+		* Returns the current worksheet name, only works for XLSX files so far
+		*/
+		
+		public function getCurrentWorksheetName()
+		{
+			if(self::TYPE_XLSX)
+				return $this -> Handle -> getCurrentWorksheetName();
+			else
+				return false;
+		}
+		
+		/**
+		* Returns the current worksheet Id, only works for XLSX files so far
+		*/
+		
+		public function getCurrentWorksheetId()
+		{
+			if(self::TYPE_XLSX)
+				return $this -> Handle -> getCurrentWorksheetId();
+			else
+				return false;
+		}
+		
+		/**
+		* Returns an associative array containing all the worksheets names and Id in the file.
+		* The array is built like this: array['worksheet_name'] = worksheet_id
+		*/
+		public function getWorksheetsNames()
+		{
+			if(self::TYPE_XLSX)
+				return $this -> Handle -> getWorksheetsNames();
+			else
+				return false;
+		}
+		
+		//------------------------------------------------------------------------------
+		
 		/**
 		 * Autoloads the required class for the particular spreadsheet type
 		 *

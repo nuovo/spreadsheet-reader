@@ -118,7 +118,17 @@
 				$this -> Options['Delimiter'] = $Delimiter;
 			}
 		}
-
+		//------------------ Tobbi Filteau ----------------------------------------
+		/**
+		* Forced to add these methods of the XLSX class here to make the librairy work
+		* They don't do anything here.
+		*/
+		public function loadWorksheetByName($name) {}
+		public function loadWorksheetById($wsId = 1) {}
+		public function getCurrentWorksheetName() {}
+		public function getCurrentWorksheetId() {}
+		public function getWorksheetsNames() {}
+		//-------------------------------------------------------------------------
 		// !Iterator interface methods
 		/** 
 		 * Rewind the Iterator to the first element.

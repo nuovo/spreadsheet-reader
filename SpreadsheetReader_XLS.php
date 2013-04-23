@@ -66,7 +66,7 @@
 				$this -> Error = true;
 				return null;
 			}
-
+			
 			$this -> ColumnCount = $this -> Handle -> sheets[0]['numCols'];
 			$this -> EmptyRow = array_fill(1, $this -> ColumnCount, '');
 		}
