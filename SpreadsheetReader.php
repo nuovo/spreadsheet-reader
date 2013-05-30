@@ -44,6 +44,13 @@
 				throw new Exception('SpreadsheetReader: File ('.$Filepath.') not readable');
 			}
 
+			// To avoid timezone warnings and exceptions for formatting dates retrieved from files
+			$DefaultTZ = @date_default_timezone_get();
+			if ($DefaultTZ)
+			{
+				date_default_timezone_set($DefaultTZ);
+			}
+
 			// 1. Determine type
 			if (!$OriginalFilename)
 			{
