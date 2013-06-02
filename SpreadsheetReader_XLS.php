@@ -52,15 +52,13 @@
 				throw new Exception('SpreadsheetReader_XLS: Spreadsheet_Excel_Reader class not available');
 			}
 
-			$this -> Handle = new Spreadsheet_Excel_Reader;
-			$this -> Handle -> setOutputEncoding('UTF-8');
+			$this -> Handle = new Spreadsheet_Excel_Reader($Filepath, false, 'UTF-8');
 
 			if (function_exists('mb_convert_encoding'))
 			{
 				$this -> Handle -> setUTFEncoder('mb');
 			}
 
-			$this -> Handle -> read($Filepath);
 			if (empty($this -> Handle -> sheets))
 			{
 				$this -> Error = true;
