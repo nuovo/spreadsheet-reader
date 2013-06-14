@@ -346,17 +346,16 @@
 		 */
 		private function PrepareSharedStringCache()
 		{
-			$SharedStringCount = 0;
 			while ($this -> SharedStrings -> read())
 			{
 				if ($this -> SharedStrings -> name == 'sst')
 				{
-					$SharedStringCount = $this -> SharedStrings -> getAttribute('count');
+					$this -> SharedStringCount = $this -> SharedStrings -> getAttribute('count');
 					break;
 				}
 			}
 
-			if (!$SharedStringCount || (self::SHARED_STRING_CACHE_LIMIT < $SharedStringCount && self::SHARED_STRING_CACHE_LIMIT !== null))
+			if (!$this -> SharedStringCount || (self::SHARED_STRING_CACHE_LIMIT < $this -> SharedStringCount && self::SHARED_STRING_CACHE_LIMIT !== null))
 			{
 				return false;
 			}
@@ -385,6 +384,7 @@
 				}
 			}
 
+			$this -> SharedStrings -> close();
 			return true;
 		}
 
@@ -397,7 +397,7 @@
 		 */
 		private function GetSharedString($Index)
 		{
-			if ((self::SHARED_STRING_CACHE_LIMIT === null || self::SHARED_STRING_CACHE_LIMIT > 0) && ($this -> SharedStringCache !== null))
+			if ((self::SHARED_STRING_CACHE_LIMIT === null || self::SHARED_STRING_CACHE_LIMIT > 0) && !empty($this -> SharedStringCache))
 			{
 				if (isset($this -> SharedStringCache[$Index]))
 				{
