@@ -22,6 +22,16 @@
 		private $Error = false;
 
 		/**
+		 * @var array Sheet information
+		 */
+		private $Sheets = false;
+
+		/**
+		 * @var int Current sheet index
+		 */
+		private $CurrentSheet = 0;
+
+		/**
 		 * @var array Content of the current row
 		 */
 		private $CurrentRow = array();
@@ -65,8 +75,7 @@
 				return null;
 			}
 
-			$this -> ColumnCount = $this -> Handle -> sheets[0]['numCols'];
-			$this -> EmptyRow = array_fill(1, $this -> ColumnCount, '');
+			$this -> ChangeSheet(0);
 		}
 
 		public function __destruct()
@@ -74,11 +83,55 @@
 			unset($this -> Handle);
 		}
 
+		/**
+		 * Retrieves an array with information about sheets in the current file
+		 *
+		 * @return array List of sheets (key is sheet index, value is name)
+		 */
+		public function Sheets()
+		{
+			if ($this -> Sheets === false)
+			{
+				$this -> Sheets = array();
+				foreach ($this -> Handle -> boundsheets as $Index => $Data)
+				{
+					$this -> Sheets[$Index] = $Data['name'];
+				}
+			}
+			return $this -> Sheets;
+		}
+
+		/**
+		 * Changes the current sheet in the file to another
+		 *
+		 * @param int Sheet index
+		 *
+		 * @return bool True if sheet was successfully changed, false otherwise.
+		 */
+		public function ChangeSheet($Index)
+		{
+			$Index = (int)$Index;
+			$Sheets = $this -> Sheets();
+
+			if (isset($this -> Sheets[$Index]))
+			{
+				$this -> rewind();
+				$this -> CurrentSheet = $Index;
+
+				$this -> ColumnCount = $this -> Handle -> sheets[$this -> CurrentSheet]['numCols'];
+				$this -> EmptyRow = array_fill(1, $this -> ColumnCount, '');
+			}
+
+			return false;
+		}
+
 		public function __get($Name)
 		{
-			if ($Name == 'Error')
+			switch ($Name)
 			{
-				return $this -> Error;
+				case 'Error':
+					return $this -> Error;
+					break;
 			}
 			return null;
 		}
@@ -124,9 +177,9 @@
 			{
 				return array();
 			}
-			elseif (isset($this -> Handle -> sheets[0]['cells'][$this -> Index]))
+			elseif (isset($this -> Handle -> sheets[$this -> CurrentSheet]['cells'][$this -> Index]))
 			{
-				$this -> CurrentRow = $this -> Handle -> sheets[0]['cells'][$this -> Index];
+				$this -> CurrentRow = $this -> Handle -> sheets[$this -> CurrentSheet]['cells'][$this -> Index];
 				if (!$this -> CurrentRow)
 				{
 					return array();
@@ -168,7 +221,7 @@
 			{
 				return false;
 			}
-			return ($this -> Index <= $this -> Handle -> sheets[0]['numRows']);
+			return ($this -> Index <= $this -> Handle -> sheets[$this -> CurrentSheet]['numRows']);
 		}
 
 		// !Countable interface method
@@ -183,7 +236,7 @@
 				return 0;
 			}
 
-			return $this -> Handle -> sheets[0]['numRows'];
+			return $this -> Handle -> sheets[$this -> CurrentSheet]['numRows'];
 		}
 	}
 ?>

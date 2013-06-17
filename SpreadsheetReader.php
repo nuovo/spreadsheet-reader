@@ -2,7 +2,7 @@
 /**
  * Main class for spreadsheet reading
  *
- * @version 0.4.3
+ * @version 0.5.0
  * @author Martins Pilsetnieks
  */
 	class SpreadsheetReader implements Iterator, Countable
@@ -167,6 +167,31 @@
 					$this -> Handle = new SpreadsheetReader_ODS($Filepath, $this -> Options);
 					break;
 			}
+		}
+
+		/**
+		 * Gets information about separate sheets in the given file
+		 *
+		 * @return array Associative array where key is sheet index and value is sheet name
+		 */
+		public function Sheets()
+		{
+			return $this -> Handle -> Sheets();
+		}
+
+		/**
+		 * Changes the current sheet to another from the file.
+		 *	Note that changing the sheet will rewind the file to the beginning, even if
+		 *	the current sheet index is provided.
+		 *
+		 * @param int Sheet index
+		 *
+		 * @return bool True if sheet could be changed to the specified one,
+		 *	false if not (for example, if incorrect index was provided.
+		 */
+		public function ChangeSheet($Index)
+		{
+			return $this -> Handle -> ChangeSheet($Index);
 		}
 
 		/**
