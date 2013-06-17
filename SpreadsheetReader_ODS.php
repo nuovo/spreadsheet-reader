@@ -20,6 +20,16 @@
 		 */
 		private $Content = false;
 
+		/**
+		 * @var array Data about separate sheets in the file
+		 */
+		private $Sheets = false;
+
+		/**
+		 * @var int Number of the sheet we're currently reading
+		 */
+		private $CurrentSheet = 0;
+
 		private $Index = 0;
 
 		private $TableOpen = false;
@@ -86,6 +96,60 @@
 			}
 		}
 
+		/**
+		 * Retrieves an array with information about sheets in the current file
+		 *
+		 * @return array List of sheets (key is sheet index, value is name)
+		 */
+		public function Sheets()
+		{
+			if ($this -> Sheets === false)
+			{
+				$this -> Sheets = array();
+
+				if ($this -> Valid)
+				{
+					$this -> SheetReader = new XMLReader;
+					$this -> SheetReader -> open($this -> ContentPath);
+
+					while ($this -> SheetReader -> read())
+					{
+						if ($this -> SheetReader -> name == 'table:table')
+						{
+							$this -> Sheets[] = $this -> SheetReader -> getAttribute('table:name');
+							$this -> SheetReader -> next();
+						}
+					}
+					
+					$this -> SheetReader -> close();
+				}
+			}
+			return $this -> Sheets;
+		}
+
+		/**
+		 * Changes the current sheet in the file to another
+		 *
+		 * @param int Sheet index
+		 *
+		 * @return bool True if sheet was successfully changed, false otherwise.
+		 */
+		public function ChangeSheet($Index)
+		{
+			$Index = (int)$Index;
+
+			$Sheets = $this -> Sheets();
+			if (isset($Sheets[$Index]))
+			{
+				$this -> CurrentSheet = $Index;
+				$this -> rewind();
+
+				return true;
+			}
+
+			return false;
+		}
+
 		// !Iterator interface methods
 		/** 
 		 * Rewind the Iterator to the first element.
@@ -136,12 +200,27 @@
 
 			if (!$this -> TableOpen)
 			{
-				while ($this -> Valid = $this -> Content -> read())
+				$TableCounter = 0;
+				$SkipRead = false;
+
+				while ($this -> Valid = ($SkipRead || $this -> Content -> read()))
 				{
+					if ($SkipRead)
+					{
+						$SkipRead = false;
+					}
+
 					if ($this -> Content -> name == 'table:table' && $this -> Content -> nodeType != XMLReader::END_ELEMENT)
 					{
-						$this -> TableOpen = true;
-						break;
+						if ($TableCounter == $this -> CurrentSheet)
+						{
+							$this -> TableOpen = true;
+							break;
+						}
+
+						$TableCounter++;
+						$this -> Content -> next();
+						$SkipRead = true;
 					}
 				}
 			}

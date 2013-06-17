@@ -22,6 +22,8 @@
 		 */
 		private $Handle = false;
 
+		private $Filepath = '';
+
 		private $Index = 0;
 
 		private $CurrentRow = array();
@@ -34,6 +36,8 @@
 		 */
 		public function __construct($Filepath, array $Options = null)
 		{
+			$this -> Filepath = $Filepath;
+
 			if (!is_readable($Filepath))
 			{
 				throw new Exception('SpreadsheetReader_CSV: File not readable ('.$Filepath.')');
@@ -117,6 +121,34 @@
 
 				$this -> Options['Delimiter'] = $Delimiter;
 			}
+		}
+
+		/**
+		 * Returns information about sheets in the file.
+		 * Because CSV doesn't have any, it's just a single entry.
+		 *
+		 * @return array Sheet data
+		 */
+		public function Sheets()
+		{
+			return array(0 => basename($this -> Filepath));
+		}
+
+		/**
+		 * Changes sheet to another. Because CSV doesn't have any sheets
+		 *	it just rewinds the file so the behaviour is compatible with other
+		 *	sheet readers. (If an invalid index is given, it doesn't do anything.)
+		 *
+		 * @param bool Status
+		 */
+		public function ChangeSheet($Index)
+		{
+			if ($Index == 0)
+			{
+				$this -> rewind();
+				return true;
+			}
+			return false;
 		}
 
 		// !Iterator interface methods

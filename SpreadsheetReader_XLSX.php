@@ -62,6 +62,12 @@
 		 */
 		private $SharedStringCache = array();
 
+		// Workbook data
+		/**
+		 * @var SimpleXMLElement XML object for the workbook XML file
+		 */
+		private $WorkbookXML = false;
+
 		// Style data
 		/**
 		 * @var SimpleXMLElement XML object for the styles XML file
@@ -73,6 +79,7 @@
 		private $Styles = array();
 
 		private $TempDir = '';
+		private $TempFiles = array();
 
 		private $CurrentRow = array();
 
@@ -81,6 +88,11 @@
 		 * @var int Current row in the file
 		 */
 		private $Index = 0;
+
+		/**
+		 * @var array Data about separate sheets in the file
+		 */
+		private $Sheets = false;
 
 		private $SharedStringCount = 0;
 		private $SharedStringIndex = 0;
@@ -211,57 +223,45 @@
 				throw new Exception('SpreadsheetReader_XLSX: File not readable ('.$Filepath.') (Error '.$Status.')');
 			}
 
+			// Getting the general workbook information
+			if ($Zip -> locateName('xl/workbook.xml') !== false)
+			{
+				$this -> WorkbookXML = new SimpleXMLElement($Zip -> getFromName('xl/workbook.xml'));
+			}
+
 			// Extracting the XMLs from the XLSX zip file
 			if ($Zip -> locateName('xl/sharedStrings.xml') !== false)
 			{
-				$this -> SharedStringsPath = $this -> TempDir.'xl/sharedStrings.xml';
-			}
+				$this -> SharedStringsPath = $this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'sharedStrings.xml';
+				$Zip -> extractTo($this -> TempDir, 'xl/sharedStrings.xml');
+				$this -> TempFiles[] = $this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'sharedStrings.xml';
 
-			// 10 tries to check for worksheets should be enough
-			$WorksheetIndex = 0;
-			for ($i = 0; $i < 10; $i++)
-			{
-				if ($Zip -> locateName('xl/worksheets/sheet'.$i.'.xml') !== false)
+				if (is_readable($this -> SharedStringsPath))
 				{
-					$WorksheetIndex = $i;
-					$this -> WorksheetPath = $this -> TempDir.'xl/worksheets/sheet'.$WorksheetIndex.'.xml';
-					break;
+					$this -> SharedStrings = new XMLReader;
+					$this -> SharedStrings -> open($this -> SharedStringsPath);
+					$this -> PrepareSharedStringCache();
 				}
 			}
 
-			if ($this -> WorksheetPath)
+			$Sheets = $this -> Sheets();
+			
+			foreach ($this -> Sheets as $Index => $Name)
 			{
-				$Zip -> extractTo($this -> TempDir, 'xl/worksheets/sheet'.$WorksheetIndex.'.xml');
-				if ($this -> SharedStringsPath)
+				if ($Zip -> locateName('xl/worksheets/sheet'.$Index.'.xml') !== false)
 				{
-					$Zip -> extractTo($this -> TempDir, 'xl/sharedStrings.xml');
-				}
-
-				if ($Zip -> locateName('xl/styles.xml') !== false)
-				{
-					$this -> StylesXML = new SimpleXMLElement($Zip -> getFromName('xl/styles.xml'));
+					$Zip -> extractTo($this -> TempDir, 'xl/worksheets/sheet'.$Index.'.xml');
+					$this -> TempFiles[] = $this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'worksheets'.DIRECTORY_SEPARATOR.'sheet'.$Index.'.xml';
 				}
 			}
 
-			$Zip -> close();
-
-			if ($this -> WorksheetPath && is_readable($this -> WorksheetPath))
-			{
-				$this -> Worksheet = new XMLReader;
-				$this -> Worksheet -> open($this -> WorksheetPath);
-				$this -> Valid = true;
-			}
-			if ($this -> SharedStringsPath && is_readable($this -> SharedStringsPath))
-			{
-				$this -> SharedStrings = new XMLReader;
-				$this -> SharedStrings -> open($this -> SharedStringsPath);
-				$this -> PrepareSharedStringCache();
-			}
+			$this -> ChangeSheet(0);
 
 			// If worksheet is present and is OK, parse the styles already
-			if ($this -> Worksheet && $this -> StylesXML)
+			if ($Zip -> locateName('xl/styles.xml') !== false)
 			{
-				if ($this -> StylesXML -> cellXfs && $this -> StylesXML -> cellXfs -> xf)
+				$this -> StylesXML = new SimpleXMLElement($Zip -> getFromName('xl/styles.xml'));
+				if ($this -> StylesXML && $this -> StylesXML -> cellXfs && $this -> StylesXML -> cellXfs -> xf)
 				{
 					foreach ($this -> StylesXML -> cellXfs -> xf as $Index => $XF)
 					{
@@ -288,6 +288,8 @@
 
 				unset($this -> StylesXML);
 			}
+
+			$Zip -> close();
 
 			// Setting base date
 			if (!self::$BaseDate)
@@ -318,27 +320,99 @@
 		 */
 		public function __destruct()
 		{
+			foreach ($this -> TempFiles as $TempFile)
+			{
+				@unlink($TempFile);
+			}
+
+			// Better safe than sorry - shouldn't try deleting '.' or '/', or '..'.
+			if (strlen($this -> TempDir) > 2)
+			{
+				@rmdir($this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'worksheets');
+				@rmdir($this -> TempDir.'xl');
+				@rmdir($this -> TempDir);
+			}
+
 			if ($this -> Worksheet && $this -> Worksheet instanceof XMLReader)
 			{
 				$this -> Worksheet -> close();
 				unset($this -> Worksheet);
 			}
-			if (file_exists($this -> WorksheetPath))
-			{
-				@unlink($this -> WorksheetPath);
-				unset($this -> WorksheetPath);
-			}
+			unset($this -> WorksheetPath);
 
 			if ($this -> SharedStrings && $this -> SharedStrings instanceof XMLReader)
 			{
 				$this -> SharedStrings -> close();
 				unset($this -> SharedStrings);
 			}
-			if (file_exists($this -> SharedStringsPath))
+			unset($this -> SharedStringsPath);
+
+			if ($this -> StylesXML)
 			{
-				@unlink($this -> SharedStringsPath);
-				unset($this -> SharedStringsPath);
+				unset($this -> StylesXML);
 			}
+			if ($this -> WorkbookXML)
+			{
+				unset($this -> WorkbookXML);
+			}
+		}
+
+		/**
+		 * Retrieves an array with information about sheets in the current file
+		 *
+		 * @return array List of sheets (key is sheet index, value is name)
+		 */
+		public function Sheets()
+		{
+			if ($this -> Sheets === false)
+			{
+				$this -> Sheets = array();
+				foreach ($this -> WorkbookXML -> sheets -> sheet as $Index => $Sheet)
+				{
+					$Attributes = $Sheet -> attributes('r', true);
+					foreach ($Attributes as $Name => $Value)
+					{
+						if ($Name == 'id')
+						{
+							$SheetID = (int)str_replace('rId', '', (string)$Value);
+							break;
+						}
+					}
+
+					$this -> Sheets[$SheetID] = (string)$Sheet['name'];
+				}
+				ksort($this -> Sheets);
+			}
+			return array_values($this -> Sheets);
+		}
+
+		/**
+		 * Changes the current sheet in the file to another
+		 *
+		 * @param int Sheet index
+		 *
+		 * @return bool True if sheet was successfully changed, false otherwise.
+		 */
+		public function ChangeSheet($Index)
+		{
+			$RealSheetIndex = false;
+			$Sheets = $this -> Sheets();
+			if (isset($Sheets[$Index]))
+			{
+				$SheetIndexes = array_keys($this -> Sheets);
+				$RealSheetIndex = $SheetIndexes[$Index];
+			}
+
+			$TempWorksheetPath = $this -> TempDir.'xl/worksheets/sheet'.$RealSheetIndex.'.xml';
+
+			if ($RealSheetIndex !== false && is_readable($TempWorksheetPath))
+			{
+				$this -> WorksheetPath = $TempWorksheetPath;
+				$this -> rewind();
+				return true;
+			}
+
+			return false;
 		}
 
 		/**
@@ -840,11 +914,19 @@
 		 */ 
 		public function rewind()
 		{
-			if ($this -> Index > 0)
+			if ($this -> Index > 0 || !($this -> Worksheet instanceof XMLReader))
 			{
 				// If the worksheet was already iterated, XML file is reopened.
 				// Otherwise it should be at the beginning anyway
-				$this -> Worksheet -> close();
+				if ($this -> Worksheet instanceof XMLReader)
+				{
+					$this -> Worksheet -> close();
+				}
+				else
+				{
+					$this -> Worksheet = new XMLReader;
+				}
+
 				$this -> Worksheet -> open($this -> WorksheetPath);
 				$this -> Valid = true;
 
