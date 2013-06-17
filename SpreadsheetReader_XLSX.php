@@ -47,7 +47,24 @@
 		 * @var XMLReader XML reader object for the worksheet XML file
 		 */
 		private $Worksheet = false;
-
+		
+		//----------- Ajouté par Tobbi Filteau ------
+		/**
+		* @var array Names of all the worksheets in the workbook
+		*/
+		private $WorksheetsNames = array();
+		
+		/**
+		* @var array Name of the currently-loaded worksheet
+		*/
+		private $CurrentWorksheetName = false;
+		
+		/**
+		* @var array Id of the currently-loaded worksheet
+		*/
+		private $CurrentWorksheetId = false;
+		//-------------------------------------------
+		
 		// Shared strings file
 		/**
 		 * @var string Path to shared strings XML file
@@ -182,13 +199,150 @@
 		 * @var array Cache for already processed format strings
 		 */
 		private $ParsedFormatCache = array();
-
+		
 		/**
 		 * @param string Path to file
 		 * @param array Options:
 		 *	TempDir => string Temporary directory path
 		 *	ReturnDateTimeObjects => bool True => dates and times will be returned as PHP DateTime objects, false => as strings
 		 */
+		public function __construct($Filepath, array $Options = null)
+		{
+			$tempWorkbook = null;
+			$tempWorksheets = null;
+			$attributes = null;
+			
+			if (!is_readable($Filepath))
+			{
+				throw new Exception('SpreadsheetReader_XLSX: File not readable ('.$Filepath.')');
+			}
+
+			$this -> TempDir = isset($Options['TempDir']) && is_writable($Options['TempDir']) ?
+				$Options['TempDir'] :
+				sys_get_temp_dir();
+
+			$this -> TempDir = rtrim($this -> TempDir, DIRECTORY_SEPARATOR);
+			$this -> TempDir = $this -> TempDir.DIRECTORY_SEPARATOR.uniqid().DIRECTORY_SEPARATOR;
+
+			$Zip = new ZipArchive;
+			$Status = $Zip -> open($Filepath);
+			
+			if ($Status !== true)
+			{
+				throw new Exception('SpreadsheetReader_XLSX: File not readable ('.$Filepath.') (Error '.$Status.')');
+			}
+			
+			if($Zip -> locateName('xl/workbook.xml') !== false )
+			{
+				$Zip -> extractTo($this -> TempDir, 'xl/workbook.xml');
+				$tempWorkbook = new XMLReader();
+				$tempWorkbook->open($this -> TempDir . 'xl/workbook.xml');
+				
+				while ($tempWorkbook->name != "sheets" || !($tempWorkbook->name == "sheets" && $tempWorkbook->nodeType == XMLReader::END_ELEMENT))
+				{
+					if($tempWorkbook->name == "sheet" && $tempWorkbook->nodeType != XMLReader::END_ELEMENT)
+						$this -> WorksheetsNames[$tempWorkbook->getAttribute("name")] = preg_replace("/[A-Za-z]/", "", $tempWorkbook->getAttribute("r:id"));
+					
+					$tempWorkbook->read();
+				}
+			}
+			
+			// Extracting the XMLs from the XLSX zip file
+			
+			if ($Zip -> locateName('xl/sharedStrings.xml') !== false)
+			{
+				$this -> SharedStringsPath = $this -> TempDir.'xl/sharedStrings.xml';
+				$Zip -> extractTo($this -> TempDir, 'xl/sharedStrings.xml');
+			}
+			
+			if ($Zip -> locateName('xl/styles.xml') !== false)
+			{
+				$this -> StylesXML = new SimpleXMLElement($Zip -> getFromName('xl/styles.xml'));
+			}
+
+			//Extracting worksheets
+			
+			foreach($this -> WorksheetsNames as $wsnm => $wsid)
+			{
+				if ($Zip -> locateName('xl/worksheets/sheet' . $wsid . '.xml') !== false)
+				{
+					$Zip -> extractTo($this -> TempDir, 'xl/worksheets/sheet' . $wsid . '.xml');
+				}
+				else
+				{
+					die("Could not locate sheet " . $wsnm . " with ID " . $wsid);
+				}
+			}
+			
+			$this -> WorksheetPath = $this -> TempDir . 'xl/worksheets/';
+			
+			$Zip -> close();
+			
+			// If worksheet is present and is OK, parse the styles already
+			if ($this -> StylesXML)
+			{
+				if ($this -> StylesXML -> cellXfs && $this -> StylesXML -> cellXfs -> xf)
+				{
+					foreach ($this -> StylesXML -> cellXfs -> xf as $Index => $XF)
+					{
+						if ($XF -> attributes() -> applyNumberFormat)
+						{
+							$FormatId = (int)$XF -> attributes() -> numFmtId;
+							// If format ID >= 164, it is a custom format and should be read from styleSheet\numFmts
+							$this -> Styles[] = $FormatId;
+						}
+						else
+						{
+							$this -> Styles[] = false;
+						}
+					}
+				}
+				
+				if ($this -> StylesXML -> numFmts && $this -> StylesXML -> numFmts -> numFmt)
+				{
+					foreach ($this -> StylesXML -> numFmts -> numFmt as $Index => $NumFmt)
+					{
+						$this -> Formats[(int)$NumFmt -> attributes() -> numFmtId] = (string)$NumFmt -> attributes() -> formatCode;
+					}
+				}
+
+				unset($this -> StylesXML);
+			}
+			
+			if ($this -> SharedStringsPath && is_readable($this -> SharedStringsPath))
+			{
+				$this -> SharedStrings = new XMLReader;
+				$this -> SharedStrings -> open($this -> SharedStringsPath);
+				$this -> PrepareSharedStringCache();
+			}
+			
+			// Setting base date
+			if (!self::$BaseDate)
+			{
+				self::$BaseDate = new DateTime;
+				self::$BaseDate -> setTimezone(new DateTimeZone('UTC'));
+				self::$BaseDate -> setDate(1900, 1, 0);
+				self::$BaseDate -> setTime(0, 0, 0);
+			}
+
+			// Decimal and thousand separators
+			if (!self::$DecimalSeparator && !self::$ThousandSeparator && !self::$CurrencyCode)
+			{
+				$Locale = localeconv();
+				self::$DecimalSeparator = $Locale['decimal_point'];
+				self::$ThousandSeparator = $Locale['thousands_sep'];
+				self::$CurrencyCode = $Locale['int_curr_symbol'];
+			}
+
+			if (function_exists('gmp_gcd'))
+			{
+				self::$RuntimeInfo['GMPSupported'] = true;
+			}
+		}
+		
+		//Constructeur original, mis en commentaire temporairement, car je veux faire des tests avec du nouveau traitement
+		
+		/*
 		public function __construct($Filepath, array $Options = null)
 		{
 			if (!is_readable($Filepath))
@@ -205,7 +359,7 @@
 
 			$Zip = new ZipArchive;
 			$Status = $Zip -> open($Filepath);
-
+			
 			if ($Status !== true)
 			{
 				throw new Exception('SpreadsheetReader_XLSX: File not readable ('.$Filepath.') (Error '.$Status.')');
@@ -232,6 +386,7 @@
 			if ($this -> WorksheetPath)
 			{
 				$Zip -> extractTo($this -> TempDir, 'xl/worksheets/sheet'.$WorksheetIndex.'.xml');
+				//$Zip -> extractTo('/mnt/invalTemp');
 				if ($this -> SharedStringsPath)
 				{
 					$Zip -> extractTo($this -> TempDir, 'xl/sharedStrings.xml');
@@ -312,10 +467,37 @@
 				self::$RuntimeInfo['GMPSupported'] = true;
 			}
 		}
-
+		*/
+		
+		
 		/**
 		 * Destructor, destroys all that remains (closes and deletes temp files)
 		 */
+		public function __destruct()
+		{
+			$this -> cleanDirectory($this -> TempDir);
+		}
+		
+		/**
+		* Recursive method used by the destructor to clean the temporary files and folders created
+		*/
+		private function cleanDirectory($dir)
+		{
+			$curDir = new FileSystemIterator($dir, FilesystemIterator::SKIP_DOTS);
+			while($curDir->valid())
+			{
+				if($curDir -> isDir())
+					$this -> cleanDirectory($dir . "/" . $curDir->getFilename());
+				else
+					@unlink($dir . "/" . $curDir->getFilename());
+				
+				$curDir -> next();
+			}
+			
+			unset($curDir);
+			rmdir($dir);
+		}
+		/*
 		public function __destruct()
 		{
 			if ($this -> Worksheet && $this -> Worksheet instanceof XMLReader)
@@ -340,7 +522,7 @@
 				unset($this -> SharedStringsPath);
 			}
 		}
-
+		*/
 		/**
 		 * Creating shared string cache if the number of shared strings is acceptably low (or there is no limit on the amount
 		 */
@@ -387,7 +569,82 @@
 			$this -> SharedStrings -> close();
 			return true;
 		}
-
+		//--------------------------------------- Tobbi Filteau ---------------------------
+		/**
+		* Loads a worksheet by name
+		*/
+		public function loadWorksheetByName($name)
+		{
+			if($this -> Worksheet)
+			{
+				$this -> rewind();
+				$this -> Worksheet -> close();
+				unset($this -> Worksheet);
+				$this -> Worksheet = false;
+				$this -> currentWorksheetName = false;
+				$this -> currentWorksheetId = false;
+			}
+			
+			if(!isset($this -> WorksheetsNames[$name]))
+				die("Worksheet " . $name . " does not exist");
+				
+			$wsId = $this -> WorksheetPath . "sheet" . $this -> WorksheetsNames[$name] . ".xml";
+			
+			if (is_readable($wsId))
+			{
+				$this -> Worksheet = new XMLReader;
+				$this -> Worksheet -> open($wsId);
+				$this -> currentWorksheetName = $name;
+				$this -> currentWorksheetId = $this -> WorksheetsNames[$name];
+				$this -> Valid = true;
+			}
+		}
+		
+		/**
+		* Loads a worksheet by Id, first sheet starts at 1
+		*/
+		public function loadWorksheetById($wsId = 1)
+		{
+			foreach($this -> WorksheetsNames as $wsName => $wsIdLoop)
+			{
+				if($wsIdLoop == $wsId)
+				{
+					$this->loadWorksheetByname($wsName);	
+					return;
+				}
+			}
+			
+			die("Worksheet " . $wsId . " does not exist");
+		}
+		
+		/**
+		* Returns the current worksheet's name
+		*/
+		public function getCurrentWorksheetName()
+		{
+			return $this -> currentWorksheetName;
+		}
+		
+		/**
+		* Returns the current worksheet's Id, starts at 1
+		*/
+		
+		public function getCurrentWorksheetId()
+		{
+			return $this -> currentWorksheetId;
+		}
+		
+		/**
+		* Returns an associative array containing all the worksheets names and Id in the file.
+		* The array is built like this: array['worksheet_name'] = worksheet_id
+		*/
+		public function getWorksheetsNames()
+		{
+			return $this -> WorksheetsNames;
+		}
+		
+		//---------------------------------------------------------------------------------
+		
 		/**
 		 * Retrieves a shared string value by its index
 		 *
