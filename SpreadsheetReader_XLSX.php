@@ -81,7 +81,7 @@
 		private $TempDir = '';
 		private $TempFiles = array();
 
-		private $CurrentRow = array();
+		private $CurrentRow = false;
 
 		// Runtime parsing data
 		/**
@@ -944,7 +944,7 @@
 		 */
 		public function current()
 		{
-			if ($this -> Index == 0)
+			if ($this -> Index == 0 && $this -> CurrentRow === false)
 			{
 				$this -> next();
 				$this -> Index--;
