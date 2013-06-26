@@ -81,7 +81,7 @@
 		private $TempDir = '';
 		private $TempFiles = array();
 
-		private $CurrentRow = array();
+		private $CurrentRow = false;
 
 		// Runtime parsing data
 		/**
@@ -944,7 +944,7 @@
 		 */
 		public function current()
 		{
-			if ($this -> Index == 0)
+			if ($this -> Index == 0 && $this -> CurrentRow === false)
 			{
 				$this -> next();
 				$this -> Index--;
@@ -959,6 +959,8 @@
 		public function next()
 		{
 			$this -> Index++;
+
+			$this -> CurrentRow = array();
 
 			if (!$this -> RowOpen)
 			{
@@ -991,10 +993,6 @@
 				if ($CurrentRowColumnCount > 0)
 				{
 					$this -> CurrentRow = array_fill(0, $CurrentRowColumnCount, '');
-				}
-				else
-				{
-					$this -> CurrentRow = array();
 				}
 
 				// These two are needed to control for empty cells
