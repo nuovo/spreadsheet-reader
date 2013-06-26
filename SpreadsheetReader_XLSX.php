@@ -347,7 +347,7 @@
 			}
 			unset($this -> SharedStringsPath);
 
-			if ($this -> StylesXML)
+			if (isset($this -> StylesXML))
 			{
 				unset($this -> StylesXML);
 			}
