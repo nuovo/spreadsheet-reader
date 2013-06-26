@@ -1,3 +1,11 @@
+### v.0.5.1  2013-06-27
+
+- Fixed file type choice when using mime-types (previously there were problems with  
+XLSX and ODS mime-types)
+
+- Fixed an error in XLSX iterator where `current()` would advance the iterator forward  
+with each call. (Thanks to [osuwariboy](https://github.com/osuwariboy))
+
 ### v.0.5.0  2013-06-17
 
 - Multiple sheet reading is now supported:
@@ -17,6 +25,6 @@ than the caching limit, instead of them being read from file, empty strings were
 - XLS file reading relies on the external Spreadsheet_Excel_Reader class which, by default,  
 reads additional information about cells like fonts, styles, etc. Now that is disabled  
 to save some memory since the style data is unnecessary anyway.  
-Thanks to https://github.com/ChALkeR for the tip.
+(Thanks to [ChALkeR](https://github.com/ChALkeR) for the tip.)
 
 Martins Pilsetnieks  <pilsetnieks@gmail.com>
