@@ -960,6 +960,8 @@
 		{
 			$this -> Index++;
 
+			$this -> CurrentRow = array();
+
 			if (!$this -> RowOpen)
 			{
 				while ($this -> Valid = $this -> Worksheet -> read())
@@ -991,10 +993,6 @@
 				if ($CurrentRowColumnCount > 0)
 				{
 					$this -> CurrentRow = array_fill(0, $CurrentRowColumnCount, '');
-				}
-				else
-				{
-					$this -> CurrentRow = array();
 				}
 
 				// These two are needed to control for empty cells
