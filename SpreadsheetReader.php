@@ -87,13 +87,13 @@
 					break;
 				case 'application/vnd.oasis.opendocument.spreadsheet':
 				case 'application/vnd.oasis.opendocument.spreadsheet-template':
-					$this -> Mode = self::TYPE_ODS;
+					$this -> Type = self::TYPE_ODS;
 					break;
 				case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
 				case 'application/vnd.openxmlformats-officedocument.spreadsheetml.template':
 				case 'application/xlsx':
 				case 'application/xltx':
-					$this -> Mode = self::TYPE_XLSX;
+					$this -> Type = self::TYPE_XLSX;
 					break;
 				case 'application/xml':
 					// Excel 2004 xml format uses this
