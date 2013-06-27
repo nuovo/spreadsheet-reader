@@ -1,7 +1,7 @@
 ### v.0.5.1  2013-06-27
 
 - Fixed file type choice when using mime-types (previously there were problems with  
-XLSX and ODS mime-types)
+XLSX and ODS mime-types) (Thanks to [incratec](https://github.com/incratec))
 
 - Fixed an error in XLSX iterator where `current()` would advance the iterator forward  
 with each call. (Thanks to [osuwariboy](https://github.com/osuwariboy))
