@@ -1,3 +1,7 @@
+### v.0.5.2  2013-06-28
+
+- A fix for the case when row count wasn't read correctly from the sheet in a XLS file.
+
 ### v.0.5.1  2013-06-27
 
 - Fixed file type choice when using mime-types (previously there were problems with  
