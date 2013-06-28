@@ -37,9 +37,14 @@
 		private $CurrentRow = array();
 
 		/**
-		 * @var int Column count in the file
+		 * @var int Column count in the sheet
 		 */
 		private $ColumnCount = 0;
+		/**
+		 * @var int Row count in the sheet
+		 */
+		private $RowCount = 0;
+
 		/**
 		 * @var array Template to use for empty rows. Retrieved rows are merged
 		 *	with this so that empty cells are added, too
@@ -119,6 +124,15 @@
 				$this -> CurrentSheet = $Index;
 
 				$this -> ColumnCount = $this -> Handle -> sheets[$this -> CurrentSheet]['numCols'];
+				$this -> RowCount = $this -> Handle -> sheets[$this -> CurrentSheet]['numRows'];
+
+				// For the case when Spreadsheet_Excel_Reader doesn't have the row count set correctly.
+				if (!$this -> RowCount && count($this -> Handle -> sheets[$this -> CurrentSheet]['cells']))
+				{
+					end($this -> Handle -> sheets[$this -> CurrentSheet]['cells']);
+					$this -> RowCount = (int)key($this -> Handle -> sheets[$this -> CurrentSheet]['cells']);
+				}
+
 				$this -> EmptyRow = array_fill(1, $this -> ColumnCount, '');
 			}
 
@@ -221,7 +235,7 @@
 			{
 				return false;
 			}
-			return ($this -> Index <= $this -> Handle -> sheets[$this -> CurrentSheet]['numRows']);
+			return ($this -> Index <= $this -> RowCount);
 		}
 
 		// !Countable interface method
@@ -236,7 +250,7 @@
 				return 0;
 			}
 
-			return $this -> Handle -> sheets[$this -> CurrentSheet]['numRows'];
+			return $this -> RowCount;
 		}
 	}
 ?>
