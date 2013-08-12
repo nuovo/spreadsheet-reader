@@ -1,3 +1,8 @@
+### v.0.5.3  2013-08-12
+
+- Fix for repeated columns in ODS files not reading correctly (thanks to [etfb](https://github.com/etfb))
+- Fix for filename extension reading (Thanks to [osuwariboy](https://github.com/osuwariboy))
+
 ### v.0.5.2  2013-06-28
 
 - A fix for the case when row count wasn't read correctly from the sheet in a XLS file.
