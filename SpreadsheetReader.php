@@ -2,7 +2,7 @@
 /**
  * Main class for spreadsheet reading
  *
- * @version 0.5.2
+ * @version 0.5.3
  * @author Martins Pilsetnieks
  */
 	class SpreadsheetReader implements Iterator, Countable
@@ -57,6 +57,8 @@
 				$OriginalFilename = $Filepath;
 			}
 
+			$Extension = strtolower(pathinfo($OriginalFilename, PATHINFO_EXTENSION));
+
 			switch ($MimeType)
 			{
 				case 'text/csv':
@@ -75,8 +77,7 @@
 				case 'application/xlt':
 				case 'application/x-xls':
 					// Excel does weird stuff
-					$Extension = substr($OriginalFilename, -4);
-					if (in_array($Extension, array('.csv', '.tsv', '.txt')))
+					if (in_array($Extension, array('csv', 'tsv', 'txt')))
 					{
 						$this -> Type = self::TYPE_CSV;
 					}
@@ -102,28 +103,23 @@
 
 			if (!$this -> Type)
 			{
-				if (substr($OriginalFilename, -5) == '.xlsx' || substr($OriginalFilename, -5) == '.xltx')
+				switch ($Extension)
 				{
-					$this -> Type = self::TYPE_XLSX;
-					$Extension = '.xlsx';
-				}
-				else
-				{
-					$Extension = substr($OriginalFilename, -4);
-				}
-
-				if ($Extension == '.xls' || $Extension == '.xlt')
-				{
-					$this -> Type = self::TYPE_XLS;
-				}
-				elseif ($Extension == '.ods' || $Extension == '.odt')
-				{
-					$this -> Type = self::TYPE_ODS;
-				}
-				elseif (!$this -> Type)
-				{
-					// If type cannot be determined, try parsing as CSV, it might just be a text file
-					$this -> Type = self::TYPE_CSV;
+					case 'xlsx':
+					case 'xltx':
+						$this -> Type = self::TYPE_XLSX;
+						break;
+					case 'xls':
+					case 'xlt':
+						$this -> Type = self::TYPE_XLS;
+						break;
+					case 'ods':
+					case 'odt':
+						$this -> Type = self::TYPE_ODS;
+						break;
+					default:
+						$this -> Type = self::TYPE_CSV;
+						break;
 				}
 			}
 

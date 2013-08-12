@@ -276,7 +276,7 @@
 									// Checking if larger than one because the value is already added to the row once before
 									if ($RepeatedColumnCount > 1)
 									{
-										$this -> CurrentRow = array_pad($this -> CurrentRow, count($this -> CurrentRow) + $RepeatedColumnCount - 1, '');
+										$this -> CurrentRow = array_pad($this -> CurrentRow, count($this -> CurrentRow) + $RepeatedColumnCount - 1, $LastCellContent);
 									}
 								}
 							}
