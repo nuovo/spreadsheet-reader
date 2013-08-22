@@ -133,7 +133,14 @@
 					$this -> RowCount = (int)key($this -> Handle -> sheets[$this -> CurrentSheet]['cells']);
 				}
 
-				$this -> EmptyRow = array_fill(1, $this -> ColumnCount, '');
+				if ($this -> ColumnCount)
+				{
+					$this -> EmptyRow = array_fill(1, $this -> ColumnCount, '');
+				}
+				else
+				{
+					$this -> EmptyRow = array();
+				}
 			}
 
 			return false;

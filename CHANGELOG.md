@@ -1,3 +1,7 @@
+### v.0.5.4  2013-08-22
+
+- Fix for a PHP warning that occurs with completely empty sheets in XLS files.
+
 ### v.0.5.3  2013-08-12
 
 - Fix for repeated columns in ODS files not reading correctly (thanks to [etfb](https://github.com/etfb))
