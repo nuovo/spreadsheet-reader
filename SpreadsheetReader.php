@@ -106,7 +106,9 @@
 				switch ($Extension)
 				{
 					case 'xlsx':
-					case 'xltx':
+					case 'xltx': // XLSX template
+					case 'xlsm': // Macro-enabled XLSX
+					case 'xltm': // Macro-enabled XLSX template
 						$this -> Type = self::TYPE_XLSX;
 						break;
 					case 'xls':
