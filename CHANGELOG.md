@@ -1,3 +1,7 @@
+### v.0.5.5  2013-08-23
+
+- Fix for macro sheets appearing when parsing XLS files. (Thanks to [osuwariboy](https://github.com/osuwariboy))
+
 ### v.0.5.4  2013-08-22
 
 - Fix for a PHP warning that occurs with completely empty sheets in XLS files.
