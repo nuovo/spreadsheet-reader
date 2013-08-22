@@ -1,0 +1,14 @@
+{
+	"name": "nuovo/spreadsheet-reader",
+	"description": "Excel reader library",
+	"version": "1.0.0",
+	"type": "library",
+	"license": ["MIT"],
+	"require": {
+		"php": ">= 5.3.0",
+		"ext-zip": "*"
+	},
+	"autoload": {
+		"classmap": ["./"]
+	}
+}
