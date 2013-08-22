@@ -25,6 +25,7 @@
 		 * @var array Sheet information
 		 */
 		private $Sheets = false;
+		private $SheetIndexes = array();
 
 		/**
 		 * @var int Current sheet index
@@ -98,9 +99,11 @@
 			if ($this -> Sheets === false)
 			{
 				$this -> Sheets = array();
-				foreach ($this -> Handle -> boundsheets as $Index => $Data)
+				$this -> SheetIndexes = array_keys($this -> Handle -> sheets);
+
+				foreach ($this -> SheetIndexes as $SheetIndex)
 				{
-					$this -> Sheets[$Index] = $Data['name'];
+					$this -> Sheets[] = $this -> Handle -> boundsheets[$SheetIndex]['name'];
 				}
 			}
 			return $this -> Sheets;
@@ -121,7 +124,7 @@
 			if (isset($this -> Sheets[$Index]))
 			{
 				$this -> rewind();
-				$this -> CurrentSheet = $Index;
+				$this -> CurrentSheet = $this -> SheetIndexes[$Index];
 
 				$this -> ColumnCount = $this -> Handle -> sheets[$this -> CurrentSheet]['numCols'];
 				$this -> RowCount = $this -> Handle -> sheets[$this -> CurrentSheet]['numRows'];
