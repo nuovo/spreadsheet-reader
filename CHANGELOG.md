@@ -1,6 +1,7 @@
 ### v.0.5.4  2013-08-22
 
 - Fix for a PHP warning that occurs with completely empty sheets in XLS files.
+- XLSM (macro-enabled XLSX) files are recognized and read, too.
 
 ### v.0.5.3  2013-08-12
 
