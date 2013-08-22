@@ -2,6 +2,7 @@
 
 - Fix for a PHP warning that occurs with completely empty sheets in XLS files.
 - XLSM (macro-enabled XLSX) files are recognized and read, too.
+- composer.json file is added to the repository (thanks to [matej116](https://github.com/matej116))
 
 ### v.0.5.3  2013-08-12
 
