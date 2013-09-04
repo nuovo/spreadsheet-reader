@@ -99,8 +99,6 @@
 		private $LastSharedStringValue = null;
 
 		private $RowOpen = false;
-		private $CellOpen = false;
-		private $ValueOpen = false;
 
 		private $SSOpen = false;
 		private $SSForwarded = false;
@@ -981,6 +979,11 @@
 							$CurrentRowColumnCount = 0;
 						}
 
+						if ($CurrentRowColumnCount > 0)
+						{
+							$this -> CurrentRow = array_fill(0, $CurrentRowColumnCount, '');
+						}
+
 						$this -> RowOpen = true;
 						break;
 					}
@@ -990,14 +993,11 @@
 			// Reading the necessary row, if found
 			if ($this -> RowOpen)
 			{
-				if ($CurrentRowColumnCount > 0)
-				{
-					$this -> CurrentRow = array_fill(0, $CurrentRowColumnCount, '');
-				}
-
 				// These two are needed to control for empty cells
 				$MaxIndex = 0;
 				$CellCount = 0;
+
+				$CellHasSharedString = false;
 
 				while ($this -> Valid = $this -> Worksheet -> read())
 				{
@@ -1010,6 +1010,7 @@
 								$this -> RowOpen = false;
 								break 2;
 							}
+							break;
 						// Cell
 						case 'c':
 							// If it is a closing tag, skip it
@@ -1018,35 +1019,24 @@
 								continue;
 							}
 
-							$this -> CellOpen = !$this -> CellOpen;
-
-							// Determine cell type and get value
-							if ($this -> Worksheet -> getAttribute('t') == self::CELL_TYPE_SHARED_STR)
-							{
-								$SharedStringIndex = $this -> Worksheet -> readString();
-								$Value = $this -> GetSharedString($SharedStringIndex);
-							}
-							else
-							{
-								$Value = $this -> Worksheet -> readString();
-							}
-
-							// Format value if necessary
-							if ($Value !== '')
-							{
-								$StyleId = (int)$this -> Worksheet -> getAttribute('s');
-								if ($StyleId && isset($this -> Styles[$StyleId]))
-								{
-									$Value = $this -> FormatValue($Value, $StyleId);
-								}
-							}
+							$StyleId = (int)$this -> Worksheet -> getAttribute('s');
 
 							// Get the index of the cell
 							$Index = $this -> Worksheet -> getAttribute('r');
 							$Letter = preg_replace('{[^[:alpha:]]}S', '', $Index);
 							$Index = self::IndexFromColumnLetter($Letter);
 
-							$this -> CurrentRow[$Index] = $Value;
+							// Determine cell type
+							if ($this -> Worksheet -> getAttribute('t') == self::CELL_TYPE_SHARED_STR)
+							{
+								$CellHasSharedString = true;
+							}
+							else
+							{
+								$CellHasSharedString = false;
+							}
+
+							$this -> CurrentRow[$Index] = '';
 
 							$CellCount++;
 							if ($Index > $MaxIndex)
@@ -1054,6 +1044,28 @@
 								$MaxIndex = $Index;
 							}
 
+							break;
+						// Cell value
+						case 'v':
+							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
+							{
+								continue;
+							}
+
+							$Value = $this -> Worksheet -> readString();
+
+							if ($CellHasSharedString)
+							{
+								$Value = $this -> GetSharedString($Value);
+							}
+
+							// Format value if necessary
+							if ($Value !== '' && $StyleId && isset($this -> Styles[$StyleId]))
+							{
+								$Value = $this -> FormatValue($Value, $StyleId);
+							}
+
+							$this -> CurrentRow[$Index] = $Value;
 							break;
 					}
 				}
