@@ -3,8 +3,8 @@
 	"description": "Spreadsheet reader library for Excel, OpenOffice and structured text files",
 	"keywords": ["spreadsheet", "xls", "xlsx", "ods", "csv", "excel", "openoffice"],
 	"homepage": "https://github.com/nuovo/spreadsheet-reader",
-	"version": "0.5.4",
-	"time": "2013-08-22",
+	"version": "0.5.6",
+	"time": "2013-09-04",
 	"type": "library",
 	"license": ["MIT"],
 	"authors": [
