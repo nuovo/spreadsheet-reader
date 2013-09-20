@@ -367,13 +367,17 @@
 				$this -> Sheets = array();
 				foreach ($this -> WorkbookXML -> sheets -> sheet as $Index => $Sheet)
 				{
-					$Attributes = $Sheet -> attributes('r', true);
-					foreach ($Attributes as $Name => $Value)
-					{
-						if ($Name == 'id')
+					if(isset($Sheet['sheetId'])){
+						$SheetID = (int)$Sheet['sheetId'];
+					} else {
+						$Attributes = $Sheet -> attributes('r', true);
+						foreach ($Attributes as $Name => $Value)
 						{
-							$SheetID = (int)str_replace('rId', '', (string)$Value);
-							break;
+							if ($Name == 'id')
+							{
+								$SheetID = (int)str_replace('rId', '', (string)$Value);
+								break;
+							}
 						}
 					}
 
@@ -406,7 +410,7 @@
 			if ($RealSheetIndex !== false && is_readable($TempWorksheetPath))
 			{
 				$this -> WorksheetPath = $TempWorksheetPath;
-				$this -> rewind();
+				$this -> rewind(true);
 				return true;
 			}
 
@@ -910,9 +914,9 @@
 		 * Rewind the Iterator to the first element.
 		 * Similar to the reset() function for arrays in PHP
 		 */ 
-		public function rewind()
+		public function rewind($forse = false)
 		{
-			if ($this -> Index > 0 || !($this -> Worksheet instanceof XMLReader))
+			if ($forse || $this -> Index > 0 || !($this -> Worksheet instanceof XMLReader))
 			{
 				// If the worksheet was already iterated, XML file is reopened.
 				// Otherwise it should be at the beginning anyway
@@ -927,7 +931,7 @@
 
 				$this -> Worksheet -> open($this -> WorksheetPath);
 				$this -> Valid = true;
-
+				$this -> CurrentRow = false;
 				$this -> RowOpen = false;
 			}
 
@@ -1046,6 +1050,7 @@
 
 							break;
 						// Cell value
+						case 'is':
 						case 'v':
 							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
 							{
