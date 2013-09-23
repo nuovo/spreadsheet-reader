@@ -5,7 +5,7 @@
  * @version 0.5.6
  * @author Martins Pilsetnieks
  */
-	class SpreadsheetReader implements Iterator, Countable
+	class SpreadsheetReader implements SeekableIterator, Countable
 	{
 		const TYPE_XLSX = 'XLSX';
 		const TYPE_XLS = 'XLS';
@@ -294,5 +294,38 @@
 			}
 			return 0;
 		}
+
+
+        /**
+         * @param int $position
+         *
+         * @return null
+         * @throws OutOfBoundsException
+         */
+        public function seek($position) {
+            if (! $this->Handle) {
+                return null;
+            };
+
+            if ($position != $this->Handle->key()) {
+                if (0 == $position) {
+                    $this->rewind();
+                    return;
+                } elseif ($position > 0) {
+                    if ($this->Handle->key() === null || $position < $this->Handle->key()) {
+                        $this->rewind();
+                    }
+
+                    while ($nodeStr = $this->Handle->next()) {
+                        if ($this->Handle->key() == $position) {
+                            return;
+                        }
+                    }
+                }
+                throw new OutOfBoundsException(Mage::helper('importexport')->__('Invalid seek position'));
+            }
+
+            return null;
+        }
 	}
 ?>
