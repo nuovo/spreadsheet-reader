@@ -877,7 +877,7 @@
 						// Scaling
 						$Value = $Value / $Format['Scale'];
 
-						if ($Format['MinWidth'] && $Format['Decimals'])
+						if (isset($Format['MinWidth']) && $Format['Decimals'])
 						{
 							if ($Format['Thousands'])
 							{
