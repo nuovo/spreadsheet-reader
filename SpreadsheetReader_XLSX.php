@@ -780,8 +780,13 @@
 			// Applying format to value
 			if ($Format)
 			{
+				// String containing digits
+				if ($Format['Type'] === false)
+				{
+					return $Value;
+				}
 				// Percentages
-				if ($Format['Type'] == 'Percentage')
+				elseif ($Format['Type'] == 'Percentage')
 				{
 					if ($Format['Code'] === '0%')
 					{
