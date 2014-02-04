@@ -367,15 +367,15 @@
 				$this -> Sheets = array();
 				foreach ($this -> WorkbookXML -> sheets -> sheet as $Index => $Sheet)
 				{
-					$Attributes = $Sheet -> attributes('r', true);
-					foreach ($Attributes as $Name => $Value)
-					{
-						if ($Name == 'id')
-						{
-							$SheetID = (int)str_replace('rId', '', (string)$Value);
-							break;
-						}
-					}
+
+                    $Attributes = $Sheet -> attributes();
+                    foreach ($Attributes as $Name => $Value)
+                    {
+                        if ($Name == 'sheetId') {
+                            $SheetID = (int)$Value;
+                            break;
+                        }
+                    }
 
 					$this -> Sheets[$SheetID] = (string)$Sheet['name'];
 				}
@@ -912,7 +912,7 @@
 		 */ 
 		public function rewind()
 		{
-			if ($this -> Index > 0 || !($this -> Worksheet instanceof XMLReader))
+			if ($this -> Index >= 0 || !($this -> Worksheet instanceof XMLReader))
 			{
 				// If the worksheet was already iterated, XML file is reopened.
 				// Otherwise it should be at the beginning anyway
