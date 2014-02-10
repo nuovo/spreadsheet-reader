@@ -1,8 +1,34 @@
 <?php
+header('Content-Type: text/plain');
+ini_set('display_errors',1);
+ini_set('display_startup_errors',1);
+error_reporting(-1);
+
+// Excel reader from http://code.google.com/p/php-excel-reader/
+//require('php-excel-reader/excel_reader2.php');
+require('SpreadsheetReader.php');
+require('Sp_XLS2.php');
+//require('xls/XlsReader.php');
+
+if (!function_exists('humanFileSize')) {
+    function humanFileSize($size)
+    {
+        if ($size >= 1073741824) {
+            $fileSize = round($size / 1024 / 1024 / 1024,1) . 'GB';
+        } elseif ($size >= 1048576) {
+            $fileSize = round($size / 1024 / 1024,1) . 'MB';
+        } elseif($size >= 1024) {
+            $fileSize = round($size / 1024,1) . 'KB';
+        } else {
+            $fileSize = $size . ' bytes';
+        }
+        return $fileSize;
+    }
+}
+
 /**
  * XLS parsing uses php-excel-reader from http://code.google.com/p/php-excel-reader/
  */
-	header('Content-Type: text/plain');
 
 	if (isset($argv[1]))
 	{
@@ -25,15 +51,13 @@
 		exit;
 	}
 
-	// Excel reader from http://code.google.com/p/php-excel-reader/
-	require('php-excel-reader/excel_reader2.php');
-	require('SpreadsheetReader.php');
+
 
 	date_default_timezone_set('UTC');
 
 	$StartMem = memory_get_usage();
 	echo '---------------------------------'.PHP_EOL;
-	echo 'Starting memory: '.$StartMem.PHP_EOL;
+	echo 'Starting memory: ' . humanFileSize($StartMem) . PHP_EOL;
 	echo '---------------------------------'.PHP_EOL;
 
 	try
@@ -58,7 +82,7 @@
 			$Time = microtime(true);
 
 			$Spreadsheet -> ChangeSheet($Index);
-
+            $counter = 0;
 			foreach ($Spreadsheet as $Key => $Row)
 			{
 				echo $Key.': ';
@@ -72,15 +96,21 @@
 				}
 				$CurrentMem = memory_get_usage();
 		
-				echo 'Memory: '.($CurrentMem - $BaseMem).' current, '.$CurrentMem.' base'.PHP_EOL;
+				echo 'Memory: '. humanFileSize($CurrentMem - $BaseMem).' current, '. humanFileSize($CurrentMem).' base'.PHP_EOL;
 				echo '---------------------------------'.PHP_EOL;
 		
-				if ($Key && ($Key % 500 == 0))
-				{
+				//if ($Key && ($Key % 500 == 0))
+				//{
 					echo '---------------------------------'.PHP_EOL;
-					echo 'Time: '.(microtime(true) - $Time);
+					echo 'Time: '.(microtime(true) - $Time) .PHP_EOL;
 					echo '---------------------------------'.PHP_EOL;
-				}
+				//}
+
+//                if ($counter == 1) {
+//                    die();
+//                }
+
+                $counter++;
 			}
 		
 			echo PHP_EOL.'---------------------------------'.PHP_EOL;
@@ -97,4 +127,6 @@
 	{
 		echo $E -> getMessage();
 	}
-?>
+
+
+
