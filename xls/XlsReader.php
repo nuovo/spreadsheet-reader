@@ -873,7 +873,7 @@ class XlsReader {
         $data = $this->data;
         $spos = $this->getStartPosition();
 
-        if ($spos === null) {
+        if ($spos === null || $sp > 0) {
             $spos = $this->boundsheets[$sp]['offset'];
         }
 

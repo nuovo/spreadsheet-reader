@@ -141,6 +141,7 @@ class SpreadsheetReader_XLS implements \Iterator, \Countable {
 
             //Unset data
             unset($this->data);
+            $this->Index = 0;
 
             return true;
         } else {
