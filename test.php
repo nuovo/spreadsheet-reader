@@ -1,4 +1,7 @@
 <?php
+
+namespace SpreadsheetReader;
+
 header('Content-Type: text/plain');
 ini_set('display_errors',1);
 ini_set('display_startup_errors',1);
@@ -7,8 +10,6 @@ error_reporting(-1);
 // Excel reader from http://code.google.com/p/php-excel-reader/
 //require('php-excel-reader/excel_reader2.php');
 require('SpreadsheetReader.php');
-require('Sp_XLS2.php');
-//require('xls/XlsReader.php');
 
 if (!function_exists('humanFileSize')) {
     function humanFileSize($size)

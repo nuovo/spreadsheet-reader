@@ -1,11 +1,14 @@
 <?php
+
+namespace SpreadsheetReader;
+
 /**
  * Main class for spreadsheet reading
  *
  * @version 0.5.6
  * @author Martins Pilsetnieks
  */
-	class SpreadsheetReader implements Iterator, Countable
+	class SpreadsheetReader implements \Iterator, \Countable
 	{
 		const TYPE_XLSX = 'XLSX';
 		const TYPE_XLS = 'XLS';
@@ -32,16 +35,17 @@
 		 */
 		private $Type = false;
 
-		/**
-		 * @param string Path to file
-		 * @param string Original filename (in case of an uploaded file), used to determine file type, optional
-		 * @param string MIME type from an upload, used to determine file type, optional
-		 */
-		public function __construct($Filepath, $OriginalFilename = false, $MimeType = false)
+        /**
+         * @param string $Filepath - Path to file
+         * @param mixed $OriginalFilename - Original filename (in case of an uploaded file), used to determine file type, optional
+         * @param mixed $MimeType - MIME type from an upload, used to determine file type, optional
+         * @throws \Exception
+         */
+        public function __construct($Filepath, $OriginalFilename = false, $MimeType = false)
 		{
 			if (!is_readable($Filepath))
 			{
-				throw new Exception('SpreadsheetReader: File ('.$Filepath.') not readable');
+				throw new \Exception('SpreadsheetReader: File ('.$Filepath.') not readable');
 			}
 
 			// To avoid timezone warnings and exceptions for formatting dates retrieved from files
@@ -70,7 +74,6 @@
 				case 'application/msexcel':
 				case 'application/x-msexcel':
 				case 'application/x-ms-excel':
-				case 'application/vnd.ms-excel':
 				case 'application/x-excel':
 				case 'application/x-dos_ms_excel':
 				case 'application/xls':
@@ -129,8 +132,8 @@
 			if ($this -> Type == self::TYPE_XLS)
 			{
 				self::Load(self::TYPE_XLS);
-//				$this -> Handle = new SpreadsheetReader_XLS($Filepath);
-                $this -> Handle = new Sp_XLS($Filepath);
+				$this -> Handle = new SpreadsheetReader_XLS($Filepath);
+
 				if ($this -> Handle -> Error)
 				{
 					$this -> Handle -> __destruct();
@@ -193,21 +196,22 @@
 			return $this -> Handle -> ChangeSheet($Index);
 		}
 
-		/**
-		 * Autoloads the required class for the particular spreadsheet type
-		 *
-		 * @param TYPE_* Spreadsheet type, one of TYPE_* constants of this class
-		 */
-		private static function Load($Type)
+        /**
+         * Autoloads the required class for the particular spreadsheet type
+         *
+         * @param $Type - TYPE_* Spreadsheet type, one of TYPE_* constants of this class
+         * @throws \Exception
+         */
+        private static function Load($Type)
 		{
 			if (!in_array($Type, array(self::TYPE_XLSX, self::TYPE_XLS, self::TYPE_CSV, self::TYPE_ODS)))
 			{
-				throw new Exception('SpreadsheetReader: Invalid type ('.$Type.')');
+				throw new \Exception('SpreadsheetReader: Invalid type ('.$Type.')');
 			}
 
 			if (!class_exists('SpreadsheetReader_'.$Type))
 			{
-				require(dirname(__FILE__).DIRECTORY_SEPARATOR.'SpreadsheetReader_'.$Type.'.php');
+				include_once(dirname(__FILE__).DIRECTORY_SEPARATOR.'SpreadsheetReader_'.$Type.'.php');
 			}
 		}
 

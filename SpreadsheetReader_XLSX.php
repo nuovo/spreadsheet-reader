@@ -1,10 +1,13 @@
 <?php
+
+namespace SpreadsheetReader;
+
 /**
  * Class for parsing XLSX files specifically
  *
  * @author Martins Pilsetnieks
  */
-	class SpreadsheetReader_XLSX implements Iterator, Countable
+	class SpreadsheetReader_XLSX implements \Iterator, \Countable
 	{
 		const CELL_TYPE_BOOL = 'b';
 		const CELL_TYPE_NUMBER = 'n';

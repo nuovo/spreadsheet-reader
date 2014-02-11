@@ -1,9 +1,14 @@
 <?php
 
-require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'SpreadsheetReader.php';
-require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Sp_XLS2.php';
+namespace SpreadsheetReader\tests;
 
-class TestXlsImport extends PHPUnit_Framework_TestCase
+use SpreadsheetReader\SpreadsheetReader;
+
+$root = dirname(__DIR__) . DIRECTORY_SEPARATOR;
+
+include_once $root . 'SpreadsheetReader.php';
+
+class TestXlsImport extends \PHPUnit_Framework_TestCase
 {
     /**
      * Simple tests, loads file and compare does library gets the same values
@@ -141,6 +146,26 @@ class TestXlsImport extends PHPUnit_Framework_TestCase
 
         //echo "\n" . json_encode($a) . "\n";
         //echo json_encode($b);
+
+        $this->assertTrue($this->arraysEqual($a, $b));
+    }
+
+    public function testDataTypes()
+    {
+        $a = $this->getArrayFromFile('xls/datatypes.xls');
+        $sheet = 0;
+        $b[$sheet][] = array(
+            0 => 1,
+            1 => '0001',
+            2 => 'Some text',
+            3 => 2.11,
+            4 => true,
+            5 => 'January 1, 2014',
+            6 => '02:12:00 PM'
+        );
+
+        echo "\n" . json_encode($a) . "\n";
+        echo json_encode($b);
 
         $this->assertTrue($this->arraysEqual($a, $b));
     }
