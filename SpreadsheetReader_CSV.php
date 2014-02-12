@@ -1,10 +1,13 @@
 <?php
+
+namespace SpreadsheetReader;
+
 /**
  * Class for parsing CSV files
  *
  * @author Martins Pilsetnieks
  */
- 	class SpreadsheetReader_CSV implements Iterator, Countable
+ 	class SpreadsheetReader_CSV implements \Iterator, \Countable
 	{
 		/**
 		 * @var array Options array, pre-populated with the default values.

@@ -1,10 +1,12 @@
 <?php
+namespace SpreadsheetReader;
+
 /**
  * Class for parsing ODS files
  *
  * @author Martins Pilsetnieks
  */
-	class SpreadsheetReader_ODS implements Iterator, Countable
+	class SpreadsheetReader_ODS implements \Iterator, \Countable
 	{
 		private $Options = array(
 			'TempDir' => '',
