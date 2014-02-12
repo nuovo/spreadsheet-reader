@@ -209,9 +209,10 @@ namespace SpreadsheetReader;
 				throw new \Exception('SpreadsheetReader: Invalid type ('.$Type.')');
 			}
 
-			if (!class_exists('SpreadsheetReader_'.$Type))
+			$className = sprintf('SpreadsheetReader_%s', $Type);
+			if (!class_exists($className, false))
 			{
-				include_once(dirname(__FILE__).DIRECTORY_SEPARATOR.'SpreadsheetReader_'.$Type.'.php');
+				include_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . $className . '.php');
 			}
 		}
 
