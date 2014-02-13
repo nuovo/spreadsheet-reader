@@ -182,6 +182,14 @@ namespace SpreadsheetReader;
 		}
 
 		/**
+		 * @return int
+		 */
+		public function GetSheetIndex()
+		{
+			return $this -> Index;
+		}
+
+		/**
 		 * Changes the current sheet to another from the file.
 		 *	Note that changing the sheet will rewind the file to the beginning, even if
 		 *	the current sheet index is provided.
@@ -193,6 +201,7 @@ namespace SpreadsheetReader;
 		 */
 		public function ChangeSheet($Index)
 		{
+			$this-> Index = $Index;
 			return $this -> Handle -> ChangeSheet($Index);
 		}
 
@@ -227,7 +236,14 @@ namespace SpreadsheetReader;
 			$this -> Index = 0;
 			if ($this -> Handle)
 			{
-				$this -> Handle -> rewind();
+				if ($this -> Handle instanceof SpreadsheetReader_XLSX) {
+					$handle = $this -> Handle;
+					/** @var SpreadsheetReader_XLSX|bool $handle */
+
+					$handle -> ChangeSheet(0);
+				} else {
+					$this -> Handle -> rewind();
+				}
 			}
 		}
 
@@ -252,11 +268,18 @@ namespace SpreadsheetReader;
 		 */ 
 		public function next()
 		{
-			if ($this -> Handle)
+			$handle = $this -> Handle;
+			if ($handle)
 			{
 				$this -> Index++;
 
-				return $this -> Handle -> next();
+				if ($handle instanceof SpreadsheetReader_XLSX) {
+					/** @var bool|SpreadsheetReader_XLSX $handle */
+
+					$handle -> ChangeSheet($this -> Index);
+				} else {
+					return $handle -> next();
+				}
 			}
 			return null;
 		}
@@ -299,6 +322,22 @@ namespace SpreadsheetReader;
 				return $this -> Handle -> count();
 			}
 			return 0;
+		}
+
+		/**
+		 * @return \SpreadsheetReader\SpreadsheetReader_
+		 */
+		public function getHandle()
+		{
+			return $this->Handle;
+		}
+
+		/**
+		 * @return \SpreadsheetReader\TYPE_
+		 */
+		public function getType()
+		{
+			return $this->Type;
 		}
 	}
 ?>

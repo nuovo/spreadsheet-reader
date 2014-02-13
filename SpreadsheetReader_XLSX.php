@@ -2,6 +2,9 @@
 
 namespace SpreadsheetReader;
 
+use SimpleXMLElement;
+use XMLReader;
+
 /**
  * Class for parsing XLSX files specifically
  *
@@ -206,7 +209,7 @@ namespace SpreadsheetReader;
 		{
 			if (!is_readable($Filepath))
 			{
-				throw new Exception('SpreadsheetReader_XLSX: File not readable ('.$Filepath.')');
+				throw new \Exception('SpreadsheetReader_XLSX: File not readable ('.$Filepath.')');
 			}
 
 			$this -> TempDir = isset($Options['TempDir']) && is_writable($Options['TempDir']) ?
@@ -216,18 +219,18 @@ namespace SpreadsheetReader;
 			$this -> TempDir = rtrim($this -> TempDir, DIRECTORY_SEPARATOR);
 			$this -> TempDir = $this -> TempDir.DIRECTORY_SEPARATOR.uniqid().DIRECTORY_SEPARATOR;
 
-			$Zip = new ZipArchive;
+			$Zip = new \ZipArchive;
 			$Status = $Zip -> open($Filepath);
 
 			if ($Status !== true)
 			{
-				throw new Exception('SpreadsheetReader_XLSX: File not readable ('.$Filepath.') (Error '.$Status.')');
+				throw new \Exception('SpreadsheetReader_XLSX: File not readable ('.$Filepath.') (Error '.$Status.')');
 			}
 
 			// Getting the general workbook information
 			if ($Zip -> locateName('xl/workbook.xml') !== false)
 			{
-				$this -> WorkbookXML = new SimpleXMLElement($Zip -> getFromName('xl/workbook.xml'));
+				$this -> WorkbookXML = new \SimpleXMLElement($Zip -> getFromName('xl/workbook.xml'));
 			}
 
 			// Extracting the XMLs from the XLSX zip file
@@ -239,7 +242,7 @@ namespace SpreadsheetReader;
 
 				if (is_readable($this -> SharedStringsPath))
 				{
-					$this -> SharedStrings = new XMLReader;
+					$this -> SharedStrings = new \XMLReader;
 					$this -> SharedStrings -> open($this -> SharedStringsPath);
 					$this -> PrepareSharedStringCache();
 				}
@@ -261,7 +264,7 @@ namespace SpreadsheetReader;
 			// If worksheet is present and is OK, parse the styles already
 			if ($Zip -> locateName('xl/styles.xml') !== false)
 			{
-				$this -> StylesXML = new SimpleXMLElement($Zip -> getFromName('xl/styles.xml'));
+				$this -> StylesXML = new \SimpleXMLElement($Zip -> getFromName('xl/styles.xml'));
 				if ($this -> StylesXML && $this -> StylesXML -> cellXfs && $this -> StylesXML -> cellXfs -> xf)
 				{
 					foreach ($this -> StylesXML -> cellXfs -> xf as $Index => $XF)
@@ -295,8 +298,8 @@ namespace SpreadsheetReader;
 			// Setting base date
 			if (!self::$BaseDate)
 			{
-				self::$BaseDate = new DateTime;
-				self::$BaseDate -> setTimezone(new DateTimeZone('UTC'));
+				self::$BaseDate = new \DateTime;
+				self::$BaseDate -> setTimezone(new \DateTimeZone('UTC'));
 				self::$BaseDate -> setDate(1900, 1, 0);
 				self::$BaseDate -> setTime(0, 0, 0);
 			}
@@ -334,14 +337,14 @@ namespace SpreadsheetReader;
 				@rmdir($this -> TempDir);
 			}
 
-			if ($this -> Worksheet && $this -> Worksheet instanceof XMLReader)
+			if ($this -> Worksheet && $this -> Worksheet instanceof \XMLReader)
 			{
 				$this -> Worksheet -> close();
 				unset($this -> Worksheet);
 			}
 			unset($this -> WorksheetPath);
 
-			if ($this -> SharedStrings && $this -> SharedStrings instanceof XMLReader)
+			if ($this -> SharedStrings && $this -> SharedStrings instanceof \XMLReader)
 			{
 				$this -> SharedStrings -> close();
 				unset($this -> SharedStrings);
@@ -442,7 +445,7 @@ namespace SpreadsheetReader;
 				switch ($this -> SharedStrings -> name)
 				{
 					case 'si':
-						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+						if ($this -> SharedStrings -> nodeType == \XMLReader::END_ELEMENT)
 						{
 							$this -> SharedStringCache[$CacheIndex] = $CacheValue;
 							$CacheIndex++;
@@ -450,7 +453,7 @@ namespace SpreadsheetReader;
 						}
 						break;
 					case 't':
-						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+						if ($this -> SharedStrings -> nodeType == \XMLReader::END_ELEMENT)
 						{
 							continue;
 						}
@@ -540,7 +543,7 @@ namespace SpreadsheetReader;
 
 				if ($this -> SharedStrings -> name == 'si')
 				{
-					if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+					if ($this -> SharedStrings -> nodeType == \XMLReader::END_ELEMENT)
 					{
 						$this -> SSOpen = false;
 						$this -> SharedStringIndex++;
@@ -575,14 +578,14 @@ namespace SpreadsheetReader;
 					switch ($this -> SharedStrings -> name)
 					{
 						case 't':
-							if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+							if ($this -> SharedStrings -> nodeType == \XMLReader::END_ELEMENT)
 							{
 								continue;
 							}
 							$Value .= $this -> SharedStrings -> readString();
 							break;
 						case 'si':
-							if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+							if ($this -> SharedStrings -> nodeType == \XMLReader::END_ELEMENT)
 							{
 								$this -> SSOpen = false;
 								$this -> SSForwarded = true;
@@ -816,7 +819,7 @@ namespace SpreadsheetReader;
 					}
 
 					$Value = clone self::$BaseDate;
-					$Value -> add(new DateInterval('P'.$Days.'D'.($Seconds ? 'T'.$Seconds.'S' : '')));
+					$Value -> add(new \DateInterval('P'.$Days.'D'.($Seconds ? 'T'.$Seconds.'S' : '')));
 
 					if (!$this -> Options['ReturnDateTimeObjects'])
 					{
@@ -915,17 +918,17 @@ namespace SpreadsheetReader;
 		 */ 
 		public function rewind()
 		{
-			if ($this -> Index >= 0 || !($this -> Worksheet instanceof XMLReader))
+			if ($this -> Index >= 0 || !($this -> Worksheet instanceof \XMLReader))
 			{
 				// If the worksheet was already iterated, XML file is reopened.
 				// Otherwise it should be at the beginning anyway
-				if ($this -> Worksheet instanceof XMLReader)
+				if ($this -> Worksheet instanceof \XMLReader)
 				{
 					$this -> Worksheet -> close();
 				}
 				else
 				{
-					$this -> Worksheet = new XMLReader;
+					$this -> Worksheet = new \XMLReader;
 				}
 
 				$this -> Worksheet -> open($this -> WorksheetPath);
@@ -935,6 +938,7 @@ namespace SpreadsheetReader;
 			}
 
 			$this -> Index = 0;
+			$this -> findRecord();
 		}
 
 		/**
@@ -963,6 +967,13 @@ namespace SpreadsheetReader;
 
 			$this -> CurrentRow = array();
 
+			$this -> findRecord();
+
+			return $this -> CurrentRow;
+		}
+
+		protected function findRecord()
+		{
 			if (!$this -> RowOpen)
 			{
 				while ($this -> Valid = $this -> Worksheet -> read())
@@ -1008,7 +1019,7 @@ namespace SpreadsheetReader;
 					{
 						// End of row
 						case 'row':
-							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
+							if ($this -> Worksheet -> nodeType == \XMLReader::END_ELEMENT)
 							{
 								$this -> RowOpen = false;
 								break 2;
@@ -1017,7 +1028,7 @@ namespace SpreadsheetReader;
 						// Cell
 						case 'c':
 							// If it is a closing tag, skip it
-							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
+							if ($this -> Worksheet -> nodeType == \XMLReader::END_ELEMENT)
 							{
 								continue;
 							}
@@ -1050,7 +1061,7 @@ namespace SpreadsheetReader;
 							break;
 						// Cell value
 						case 'v':
-							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
+							if ($this -> Worksheet -> nodeType == \XMLReader::END_ELEMENT)
 							{
 								continue;
 							}
@@ -1081,8 +1092,6 @@ namespace SpreadsheetReader;
 					ksort($this -> CurrentRow);
 				}
 			}
-
-			return $this -> CurrentRow;
 		}
 
 		/** 
@@ -1174,6 +1183,54 @@ namespace SpreadsheetReader;
 
 				return $C;
 			}
+		}
+
+		/**
+		 * @param \SpreadsheetReader\SpreadsheetReader_ $Handle
+		 */
+		public function setHandle($Handle)
+		{
+			$this->Handle = $Handle;
+		}
+
+		/**
+		 * @return \SpreadsheetReader\SpreadsheetReader_
+		 */
+		public function getHandle()
+		{
+			return $this->Handle;
+		}
+
+		/**
+		 * @param int $Index
+		 */
+		public function setIndex($Index)
+		{
+			$this->Index = $Index;
+		}
+
+		/**
+		 * @return int
+		 */
+		public function getIndex()
+		{
+			return $this->Index;
+		}
+
+		/**
+		 * @param boolean $CurrentRow
+		 */
+		public function setCurrentRow($CurrentRow)
+		{
+			$this->CurrentRow = $CurrentRow;
+		}
+
+		/**
+		 * @return boolean
+		 */
+		public function getCurrentRow()
+		{
+			return $this->CurrentRow;
 		}
 	}
 ?>

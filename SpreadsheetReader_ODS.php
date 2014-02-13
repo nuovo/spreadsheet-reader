@@ -1,6 +1,10 @@
 <?php
 namespace SpreadsheetReader;
 
+use Exception;
+use XMLReader;
+use ZipArchive;
+
 /**
  * Class for parsing ODS files
  *

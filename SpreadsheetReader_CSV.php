@@ -2,6 +2,7 @@
 
 namespace SpreadsheetReader;
 
+use Exception;
 /**
  * Class for parsing CSV files
  *

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="spreadsheet-reader" default="build">
+
+    <target name="test">
+        <exec command="phpunit --configuration ./tests/phpunit.xml --bootstrap ./tests/Bootstrap.php ./tests/" logoutput="/dev/stdout" />
+    </target>
+
+    <target name="build">
+        <echo msg="Building something" />
+    </target>
+
+</project>

@@ -4,9 +4,7 @@ namespace SpreadsheetReader\tests;
 
 use SpreadsheetReader\SpreadsheetReader;
 
-$root = dirname(__DIR__) . DIRECTORY_SEPARATOR;
-
-include_once $root . 'SpreadsheetReader.php';
+include_once WEB_ROOT . 'SpreadsheetReader.php';
 
 class TestXlsImport extends \PHPUnit_Framework_TestCase
 {
@@ -15,7 +13,7 @@ class TestXlsImport extends \PHPUnit_Framework_TestCase
      */
     public function testOne()
     {
-        $a = $this->getArrayFromFile('xls/excel2003.xls');
+        $a = $this->getArrayFromFile('excel2003.xls');
         $b = array(
                 array(
                 0 => array(
@@ -37,7 +35,7 @@ class TestXlsImport extends \PHPUnit_Framework_TestCase
 
     public function testTwo()
     {
-        $a = $this->getArrayFromFile('xls/file_test_blanks.xls');
+        $a = $this->getArrayFromFile('file_test_blanks.xls');
 
         $sheet = 0;
         $b[$sheet][] = array(
@@ -76,7 +74,7 @@ class TestXlsImport extends \PHPUnit_Framework_TestCase
 
     public function testThree()
     {
-        $a = $this->getArrayFromFile('xls/file_test_blanks3.xls');
+        $a = $this->getArrayFromFile('file_test_blanks3.xls');
 
         $sheet = 0;
         $b[$sheet][] = array(
@@ -126,7 +124,7 @@ class TestXlsImport extends \PHPUnit_Framework_TestCase
 
     public function testFour()
     {
-        $a = $this->getArrayFromFile('xls/formula.xls');
+        $a = $this->getArrayFromFile('formula.xls');
 
         $sheet = 0;
         $b[$sheet][] = array(
@@ -152,7 +150,7 @@ class TestXlsImport extends \PHPUnit_Framework_TestCase
 
     public function testDataTypes()
     {
-        $a = $this->getArrayFromFile('xls/datatypes.xls');
+        $a = $this->getArrayFromFile('datatypes.xls');
         $sheet = 0;
         $b[$sheet][] = array(
             0 => 1,
@@ -164,8 +162,8 @@ class TestXlsImport extends \PHPUnit_Framework_TestCase
             6 => '02:12:00 PM'
         );
 
-        echo "\n" . json_encode($a) . "\n";
-        echo json_encode($b);
+//        echo "\n" . json_encode($a) . "\n";
+//        echo json_encode($b);
 
         $this->assertTrue($this->arraysEqual($a, $b));
     }
@@ -176,7 +174,7 @@ class TestXlsImport extends \PHPUnit_Framework_TestCase
      */
     protected function getArrayFromFile($location)
     {
-        $location = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'tests' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . $location;
+        $location = DATA_XLS . $location;
 
         $reader = new SpreadsheetReader($location);
         $sheets = $reader->Sheets();
