@@ -8,7 +8,7 @@ namespace SpreadsheetReader;
  * @version 0.5.6
  * @author Martins Pilsetnieks
  */
-	class SpreadsheetReader implements \Iterator, \Countable
+	class SpreadsheetReader implements \SeekableIterator, \Countable
 	{
 		const TYPE_XLSX = 'XLSX';
 		const TYPE_XLS = 'XLS';
@@ -234,11 +234,21 @@ namespace SpreadsheetReader;
 		public function rewind()
 		{
 			$this -> Index = 0;
-			if ($this -> Handle)
+			$handle = $this -> Handle;
+
+			if ($handle)
 			{
-				if ($this -> Handle instanceof SpreadsheetReader_XLSX) {
+				if ($handle instanceof SpreadsheetReader_XLSX) {
 					$handle = $this -> Handle;
 					/** @var SpreadsheetReader_XLSX|bool $handle */
+
+					$handle -> ChangeSheet(0);
+				} elseif ($handle instanceof SpreadsheetReader_ODS) {
+					/** @var SpreadsheetReader_ODS|bool $handle */
+
+					$handle -> ChangeSheet(0);
+				} elseif ($handle instanceof SpreadsheetReader_XLS) {
+					/** @var SpreadsheetReader_XLS|bool $handle */
 
 					$handle -> ChangeSheet(0);
 				} else {
@@ -277,6 +287,10 @@ namespace SpreadsheetReader;
 					/** @var bool|SpreadsheetReader_XLSX $handle */
 
 					$handle -> ChangeSheet($this -> Index);
+				} elseif ($handle instanceof SpreadsheetReader_XLS) {
+					/** @var bool|SpreadsheetReader_XLS $handle */
+
+					$handle -> ChangeSheet($this -> Index);
 				} else {
 					return $handle -> next();
 				}
@@ -298,6 +312,49 @@ namespace SpreadsheetReader;
 			}
 			return null;
 		}
+
+		/**
+		 * (PHP 5 &gt;= 5.1.0)<br/>
+		 * Seeks to a position
+		 * @link http://php.net/manual/en/seekableiterator.seek.php
+		 * @param int $position <p>
+		 * @throws \Exception
+		 * The position to seek to.
+		 * </p>
+		 * @return void
+		 */
+		public function seek($position)
+		{
+			$handle = $this -> Handle;
+
+			if (!$handle) {
+				return null;
+			}
+
+			if ($position != $handle -> key()) {
+				if (0 == $position) {
+					$this -> rewind();
+					return;
+				} elseif ($position > 0) {
+					if ($handle -> key() === 0 || $position < $handle -> key()) {
+						$handle -> rewind();
+					}
+
+					while ($str = $handle -> next()) {
+						if ($handle -> count() < $handle -> key()) {
+							break;
+						}
+
+						if ($handle -> key() == $position) {
+							return;
+						}
+					}
+				}
+
+				throw new \Exception('Seek position out of range');
+			}
+		}
+
 
 		/** 
 		 * Check if there is a current element after calls to rewind() or next().

@@ -168,6 +168,9 @@ class SpreadsheetReader_XLS implements \Iterator, \Countable {
     public function rewind()
     {
         $this -> Index = 0;
+
+		//Will be sheet offset used for this
+		$this -> Handle -> setStartPosition(null);
     }
 
     /**

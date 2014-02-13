@@ -68,6 +68,8 @@ class SpreadSheetReaderTest extends \PHPUnit_Framework_TestCase
 			$reader->getType(),
 			'Type should be CSV, but is ' . $reader->getType()
 		);
+
+		unset($reader);
 	}
 
 	/**

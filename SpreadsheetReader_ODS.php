@@ -41,6 +41,14 @@ use ZipArchive;
 		private $TableOpen = false;
 		private $RowOpen = false;
 
+		protected $CurrentRow = array();
+
+		/**
+		 * @var null|XMLReader $SheetReader
+		 */
+		protected $SheetReader = null;
+
+
 		/**
 		 * @param string Path to file
 		 * @param array Options:
@@ -175,6 +183,7 @@ use ZipArchive;
 				$this -> RowOpen = false;
 			}
 
+			$this -> CurrentRow = array();
 			$this -> Index = 0;
 		}
 
@@ -191,6 +200,7 @@ use ZipArchive;
 				$this -> next();
 				$this -> Index--;
 			}
+
 			return $this -> CurrentRow;
 		}
 
@@ -203,7 +213,13 @@ use ZipArchive;
 			$this -> Index++;
 
 			$this -> CurrentRow = array();
+			$this->findRecord();
 
+			return $this -> CurrentRow;
+		}
+
+		public function findRecord()
+		{
 			if (!$this -> TableOpen)
 			{
 				$TableCounter = 0;
@@ -277,12 +293,12 @@ use ZipArchive;
 								$this -> CurrentRow[] = $LastCellContent;
 
 								if ($this -> Content -> getAttribute('table:number-columns-repeated') !== null)
-								{                                                                                            
+								{
 									$RepeatedColumnCount = $this -> Content -> getAttribute('table:number-columns-repeated');
 									// Checking if larger than one because the value is already added to the row once before
 									if ($RepeatedColumnCount > 1)
 									{
-										$this -> CurrentRow = array_pad($this -> CurrentRow, count($this -> CurrentRow) + $RepeatedColumnCount - 1, $LastCellContent);
+										$this -> CurrentRow = array_pad($this -> CurrentRow, count($this -> CurrentRow) + (int)$RepeatedColumnCount - 1, $LastCellContent);
 									}
 								}
 							}
@@ -302,8 +318,6 @@ use ZipArchive;
 					}
 				}
 			}
-
-			return $this -> CurrentRow;
 		}
 
 		/** 

@@ -188,6 +188,8 @@ class TestXlsImport extends \PHPUnit_Framework_TestCase
             }
         }
 
+		unset($reader);
+
         return $a;
     }
 
