@@ -54,12 +54,15 @@ class SpreadSheetReaderOdsTest extends \PHPUnit_Framework_TestCase
 		$handle = $reader -> getHandle();
 		/** @var array|SpreadsheetReader_ODS $handle */
 
+		$this->assertTrue($reader->GetSheetIndex() == 1, 'Is sheet index also set to 0');
+		$this->assertTrue($handle->key() == 0, 'Is row index also set to 0');
+
 		$array = $handle -> current();
-		$this->assertTrue($array[0] == 2, 'Condition ' . $array[0] . ' == 2 failed');
+		$this->assertTrue($array[0] == 1, 'Condition ' . $array[0] . ' == 1 failed');
 
 		$reader -> rewind();
 
-		$this->assertTrue($reader->GetSheetIndex() == 0, 'Is sheet index also set to 0');
+		$this->assertTrue($reader->GetSheetIndex() == 1, 'Is sheet index also set to 0');
 		$this->assertTrue($handle->key() == 0, 'Is row index also set to 0');
 		$array = $handle -> current();
 
@@ -68,7 +71,7 @@ class SpreadSheetReaderOdsTest extends \PHPUnit_Framework_TestCase
 
 		$reader -> next();
 		$this->assertTrue($reader->GetSheetIndex() == 1, 'Is sheet index also set to 1');
-		$this->assertTrue($handle->key() == 0, 'Is row index should be 0 instead of ' . $handle->key());
+		$this->assertTrue($handle->key() == 1, 'Is row index should be 0 instead of ' . $handle->key());
 		$array = $handle -> current();
 
 		$this->assertTrue(isset($array[0]), 'Array value is not set');
@@ -91,16 +94,27 @@ class SpreadSheetReaderOdsTest extends \PHPUnit_Framework_TestCase
 		$reader -> ChangeSheet(1);
 
 		$this->assertEquals($reader->GetSheetIndex(), 1, 'Expected sheet position is 1, instead of ' . $reader->GetSheetIndex());
-		$this->assertEquals($handle-> key(), 0, 'Expected sheet position is 0, instead of ' . $handle -> key());
+		$this->assertEquals($handle-> key(), 0, 'Expected row position is 0, instead of ' . $handle -> key());
+		$this->assertEquals($handle->getCurrentSheet(), 1, 'Expected sheet position is 0, instead of ' . $handle -> getCurrentSheet());
 
 		$reader -> seek(30);
 		$array = $handle -> current();
 		$this->assertEquals($array[0], 80, 'Expected value after seeking is 80 instead of ' . $array[0]);
 
 		$sheets = $reader -> Sheets();
-		$this->assertEquals(count($sheets), 2, 'seeking.xlsx contains 2 sheets instead of ' . count($sheets));
+		$this->assertEquals(count($sheets), 2, 'seeking.ods contains 2 sheets instead of ' . count($sheets));
 
 		$reader -> rewind();
+
+		$reader -> seek(5);
+		$array = $handle -> current();
+		$this->assertEquals($array[0], 55, 'Expected value after seeking is 55 instead of ' . $array[0]);
+
+		$reader -> ChangeSheet(0);
+
+		$this->assertEquals($reader->GetSheetIndex(), 0, 'Expected sheet position is 0, instead of ' . $reader->GetSheetIndex());
+		$this->assertEquals($handle-> key(), 0, 'Expected row position is 0, instead of ' . $handle -> key());
+		$this->assertEquals($handle->getCurrentSheet(), 0, 'Expected sheet position is 0, instead of ' . $handle -> getCurrentSheet());
 
 		$reader -> seek(5);
 		$array = $handle -> current();

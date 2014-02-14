@@ -41,10 +41,13 @@ class SpreadSheetReaderXlsxTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue($reader->GetSheetIndex() == 0, 'Initial');
 		$reader->next();
 
-		$this->assertTrue($reader->GetSheetIndex() == 1, 'After next');
+		$this->assertTrue($reader->GetSheetIndex() == 0, 'After next');
 		$reader->rewind();
 
 		$this->assertTrue($reader->GetSheetIndex() == 0, 'After rewind');
+		$reader->ChangeSheet(1);
+
+		$this->assertTrue($reader->GetSheetIndex() == 1, 'After rewind');
 	}
 
 	public function testXlsxRowsIterations()
@@ -54,21 +57,23 @@ class SpreadSheetReaderXlsxTest extends \PHPUnit_Framework_TestCase
 		$handle = $reader -> getHandle();
 		/** @var array|SpreadsheetReader_XLSX $handle */
 
+		$this->assertTrue($reader->GetSheetIndex() == 1, 'Is sheet index also set to 0');
+		$this->assertTrue($handle->getIndex() == 0, 'Is row index also set to 0');
+
 		$array = $handle -> getCurrentRow();
 		$this->assertTrue($array[0] == 2, 'Condition ' . $array[0] . ' == 2 failed');
 
 		$reader -> rewind();
 
-		$this->assertTrue($reader->GetSheetIndex() == 0, 'Is sheet index also set to 0');
+		$this->assertTrue($reader->GetSheetIndex() == 1, 'Is sheet index also set to 0');
 		$this->assertTrue($handle->getIndex() == 0, 'Is row index also set to 0');
 		$array = $handle -> getCurrentRow();
 
-		$this->assertTrue($array[0] == 1, 'Condition ' . $array[0] . ' == 1 failed');
-		//print_r($array);
+		$this->assertTrue($array[0] == 2, 'Condition ' . $array[0] . ' == 1 failed');
 
 		$reader -> next();
 		$this->assertTrue($reader->GetSheetIndex() == 1, 'Is sheet index also set to 1');
-		$this->assertTrue($handle->getIndex() == 0, 'Is row index should be 0 instead of ' . $handle->getIndex());
+		$this->assertTrue($handle->getIndex() == 1, 'Is row index should be 0 instead of ' . $handle->getIndex());
 		$array = $handle -> getCurrentRow();
 
 		$this->assertTrue(isset($array[0]), 'Array value is not set');
@@ -102,6 +107,11 @@ class SpreadSheetReaderXlsxTest extends \PHPUnit_Framework_TestCase
 
 		$reader -> rewind();
 
+		$reader -> seek(4);
+		$array = $handle -> current();
+		$this->assertEquals($array[0], 55, 'Expected value after seeking is 5 instead of ' . $array[0]);
+
+		$reader -> ChangeSheet(0);
 		$reader -> seek(4);
 		$array = $handle -> current();
 		$this->assertEquals($array[0], 5, 'Expected value after seeking is 5 instead of ' . $array[0]);

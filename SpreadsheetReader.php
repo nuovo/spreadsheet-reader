@@ -291,6 +291,10 @@ namespace SpreadsheetReader;
 					/** @var bool|SpreadsheetReader_XLS $handle */
 
 					$handle -> ChangeSheet($this -> Index);
+				} elseif ($handle instanceof SpreadsheetReader_ODS) {
+					/** @var bool|SpreadsheetReader_ODS $handle */
+
+					$handle -> ChangeSheet($this -> Index);
 				} else {
 					return $handle -> next();
 				}

@@ -171,17 +171,17 @@ use ZipArchive;
 		 */ 
 		public function rewind()
 		{
-			if ($this -> Index > 0)
+			if ($this -> Index > 0 || $this->getCurrentSheet() > 0)
 			{
 				// If the worksheet was already iterated, XML file is reopened.
 				// Otherwise it should be at the beginning anyway
 				$this -> Content -> close();
 				$this -> Content -> open($this -> ContentPath);
 				$this -> Valid = true;
-
-				$this -> TableOpen = false;
-				$this -> RowOpen = false;
 			}
+
+			$this -> TableOpen = false;
+			$this -> RowOpen = false;
 
 			$this -> CurrentRow = array();
 			$this -> Index = 0;
@@ -227,6 +227,7 @@ use ZipArchive;
 
 				while ($this -> Valid = ($SkipRead || $this -> Content -> read()))
 				{
+
 					if ($SkipRead)
 					{
 						$SkipRead = false;
@@ -241,7 +242,7 @@ use ZipArchive;
 						}
 
 						$TableCounter++;
-						$this -> Content -> next();
+						//$this -> Content -> next();
 						$SkipRead = true;
 					}
 				}
@@ -251,7 +252,9 @@ use ZipArchive;
 			{
 				while ($this -> Valid = $this -> Content -> read())
 				{
-					switch ($this -> Content -> name)
+					$content = $this -> Content;
+
+					switch ($content->name)
 					{
 						case 'table:table':
 							$this -> TableOpen = false;
@@ -350,6 +353,14 @@ use ZipArchive;
 		public function count()
 		{
 			return $this -> Index + 1;
+		}
+
+		/**
+		 * @return int
+		 */
+		public function getCurrentSheet()
+		{
+			return $this->CurrentSheet;
 		}
 	}
 ?>

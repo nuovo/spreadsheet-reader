@@ -41,7 +41,7 @@ class SpreadSheetReaderXlsTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue($reader->GetSheetIndex() == 0, 'Initial');
 		$reader->next();
 
-		$this->assertTrue($reader->GetSheetIndex() == 1, 'After next');
+		$this->assertTrue($reader->GetSheetIndex() == 0, 'After next');
 		$reader->rewind();
 
 		$this->assertTrue($reader->GetSheetIndex() == 0, 'After rewind');
@@ -55,20 +55,22 @@ class SpreadSheetReaderXlsTest extends \PHPUnit_Framework_TestCase
 		/** @var array|SpreadsheetReader_XLS $handle */
 
 		$array = $handle -> current();
+		$this->assertTrue($reader->GetSheetIndex() == 1, 'Is sheet index also set to 0');
+		$this->assertTrue($handle->key() == 0, 'Is row index also set to 0');
 		$this->assertTrue($array[0] == 2, 'Condition ' . $array[0] . ' == 2 failed');
 
 		$reader -> rewind();
 
-		$this->assertTrue($reader->GetSheetIndex() == 0, 'Is sheet index also set to 0');
+		$this->assertTrue($reader->GetSheetIndex() == 1, 'Is sheet index also set to 1');
 		$this->assertTrue($handle->key() == 0, 'Is row index also set to 0');
 		$array = $handle -> current();
 
-		$this->assertTrue($array[0] == 1, 'Condition ' . $array[0] . ' == 1 failed');
+		$this->assertTrue($array[0] == 2, 'Condition ' . $array[0] . ' == 1 failed');
 		//print_r($array);
 
 		$reader -> next();
 		$this->assertTrue($reader->GetSheetIndex() == 1, 'Is sheet index also set to 1');
-		$this->assertTrue($handle->key() == 0, 'Is row index should be 0 instead of ' . $handle->key());
+		$this->assertTrue($handle->key() == 1, 'Is row index should be 1 instead of ' . $handle->key());
 		$array = $handle -> current();
 
 		$this->assertTrue(isset($array[0]), 'Array value is not set');

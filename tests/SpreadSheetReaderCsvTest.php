@@ -42,11 +42,11 @@ class SpreadSheetReaderCsvTest extends \PHPUnit_Framework_TestCase
 		$array = $handle -> current();
 		$this->assertTrue($array[0] == 1, 'Condition ' . $array[0] . ' == 1 failed');
 
-		$handle -> next();
+		$reader -> next();
 		$array = $handle -> current();
 		$this->assertTrue($array[0] == 2, 'Condition ' . $array[0] . ' == 2 failed');
 
-		$handle -> rewind();
+		$reader -> rewind();
 		$array = $handle -> current();
 		$this->assertTrue($array[0] == 1, 'Condition ' . $array[0] . ' == 1 failed');
 	}
@@ -66,8 +66,12 @@ class SpreadSheetReaderCsvTest extends \PHPUnit_Framework_TestCase
 
 		$reader -> rewind();
 
+		$this->assertEquals($reader->GetSheetIndex(), 0, 'Expected sheet position is 1, instead of ' . $reader->GetSheetIndex());
+		$this->assertEquals($handle-> key(), 0, 'Expected sheet position is 0, instead of ' . $handle -> key());
+
 		$reader -> seek(4);
 		$array = $handle -> current();
+
 		$this->assertEquals($array[0], 4, 'Expected value after seeking is 5 instead of ' . $array[0]);
 	}
 
