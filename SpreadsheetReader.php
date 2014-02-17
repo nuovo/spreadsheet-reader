@@ -17,6 +17,16 @@ include_once 'AbstractSpreadsheetReader.php';
 		const TYPE_CSV = 'CSV';
 		const TYPE_ODS = 'ODS';
 
+		/**
+		 * @var array
+		 */
+		protected $supportedTypes = array(
+			self::TYPE_XLSX,
+			self::TYPE_XLS,
+			self::TYPE_CSV,
+			self::TYPE_ODS
+		);
+
 		private $Options = array(
 			'Delimiter' => '',
 			'Enclosure' => '"'
@@ -203,7 +213,6 @@ include_once 'AbstractSpreadsheetReader.php';
 		 */
 		public function ChangeSheet($Index)
 		{
-			//$this-> Index = $Index;
 			return $this -> Handle -> ChangeSheet($Index);
 		}
 
@@ -215,7 +224,7 @@ include_once 'AbstractSpreadsheetReader.php';
          */
         private static function Load($Type)
 		{
-			if (!in_array($Type, array(self::TYPE_XLSX, self::TYPE_XLS, self::TYPE_CSV, self::TYPE_ODS)))
+			if (!in_array($Type, self::getSupportedTypes()))
 			{
 				throw new \Exception('SpreadsheetReader: Invalid type ('.$Type.')');
 			}
@@ -316,7 +325,7 @@ include_once 'AbstractSpreadsheetReader.php';
 						$handle -> rewind();
 					}
 
-					while ($str = $handle -> next()) {
+					while ($handle -> next()) {
 						if ($handle -> count() < $handle -> key()) {
 							break;
 						}
@@ -371,6 +380,14 @@ include_once 'AbstractSpreadsheetReader.php';
 		public function getType()
 		{
 			return $this->Type;
+		}
+
+		/**
+		 * @return array
+		 */
+		public function getSupportedTypes()
+		{
+			return $this->supportedTypes;
 		}
 	}
 ?>
