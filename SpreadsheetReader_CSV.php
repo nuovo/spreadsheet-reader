@@ -8,7 +8,7 @@ use Exception;
  *
  * @author Martins Pilsetnieks
  */
- 	class SpreadsheetReader_CSV implements \Iterator, \Countable
+ 	class SpreadsheetReader_CSV extends AbstractSpreadsheetReader implements \Iterator, \Countable
 	{
 		/**
 		 * @var array Options array, pre-populated with the default values.

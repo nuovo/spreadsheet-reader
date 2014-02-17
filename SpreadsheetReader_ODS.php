@@ -10,7 +10,7 @@ use ZipArchive;
  *
  * @author Martins Pilsetnieks
  */
-	class SpreadsheetReader_ODS implements \Iterator, \Countable
+class SpreadsheetReader_ODS extends AbstractSpreadsheetReader implements \Iterator, \Countable
 	{
 		private $Options = array(
 			'TempDir' => '',
@@ -91,6 +91,7 @@ use ZipArchive;
 				$this -> Content -> open($this -> ContentPath);
 				$this -> Valid = true;
 			}
+
 		}
 
 		/**
@@ -134,10 +135,11 @@ use ZipArchive;
 							$this -> SheetReader -> next();
 						}
 					}
-					
+
 					$this -> SheetReader -> close();
 				}
 			}
+
 			return $this -> Sheets;
 		}
 
@@ -165,20 +167,20 @@ use ZipArchive;
 		}
 
 		// !Iterator interface methods
-		/** 
+		/**
 		 * Rewind the Iterator to the first element.
 		 * Similar to the reset() function for arrays in PHP
-		 */ 
+		 */
 		public function rewind()
 		{
-			if ($this -> Index > 0 || $this->getCurrentSheet() > 0)
-			{
+			//if ($this -> Index > 0)
+			//{
 				// If the worksheet was already iterated, XML file is reopened.
 				// Otherwise it should be at the beginning anyway
 				$this -> Content -> close();
 				$this -> Content -> open($this -> ContentPath);
 				$this -> Valid = true;
-			}
+			//}
 
 			$this -> TableOpen = false;
 			$this -> RowOpen = false;
@@ -204,10 +206,10 @@ use ZipArchive;
 			return $this -> CurrentRow;
 		}
 
-		/** 
-		 * Move forward to next element. 
-		 * Similar to the next() function for arrays in PHP 
-		 */ 
+		/**
+		 * Move forward to next element.
+		 * Similar to the next() function for arrays in PHP
+		 */
 		public function next()
 		{
 			$this -> Index++;
@@ -235,14 +237,16 @@ use ZipArchive;
 
 					if ($this -> Content -> name == 'table:table' && $this -> Content -> nodeType != XMLReader::END_ELEMENT)
 					{
+
 						if ($TableCounter == $this -> CurrentSheet)
 						{
+							//echo $this->Content->getAttribute('table:style-name') . '<br>';
 							$this -> TableOpen = true;
 							break;
 						}
 
 						$TableCounter++;
-						//$this -> Content -> next();
+						$this -> Content -> next();
 						$SkipRead = true;
 					}
 				}
@@ -323,23 +327,23 @@ use ZipArchive;
 			}
 		}
 
-		/** 
+		/**
 		 * Return the identifying key of the current element.
 		 * Similar to the key() function for arrays in PHP
 		 *
 		 * @return mixed either an integer or a string
-		 */ 
+		 */
 		public function key()
 		{
 			return $this -> Index;
 		}
 
-		/** 
+		/**
 		 * Check if there is a current element after calls to rewind() or next().
 		 * Used to check if we've iterated to the end of the collection
 		 *
 		 * @return boolean FALSE if there's nothing more to iterate over
-		 */ 
+		 */
 		public function valid()
 		{
 			return $this -> Valid;

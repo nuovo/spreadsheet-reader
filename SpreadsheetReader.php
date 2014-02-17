@@ -2,6 +2,8 @@
 
 namespace SpreadsheetReader;
 
+include_once 'AbstractSpreadsheetReader.php';
+
 /**
  * Main class for spreadsheet reading
  *
@@ -186,7 +188,7 @@ namespace SpreadsheetReader;
 		 */
 		public function GetSheetIndex()
 		{
-			return $this -> Index;
+			return $this -> Handle ->getCurrentSheet();
 		}
 
 		/**
@@ -201,7 +203,7 @@ namespace SpreadsheetReader;
 		 */
 		public function ChangeSheet($Index)
 		{
-			$this-> Index = $Index;
+			//$this-> Index = $Index;
 			return $this -> Handle -> ChangeSheet($Index);
 		}
 
@@ -238,22 +240,22 @@ namespace SpreadsheetReader;
 
 			if ($handle)
 			{
-				if ($handle instanceof SpreadsheetReader_XLSX) {
-					$handle = $this -> Handle;
-					/** @var SpreadsheetReader_XLSX|bool $handle */
-
-					$handle -> ChangeSheet(0);
-				} elseif ($handle instanceof SpreadsheetReader_ODS) {
-					/** @var SpreadsheetReader_ODS|bool $handle */
-
-					$handle -> ChangeSheet(0);
-				} elseif ($handle instanceof SpreadsheetReader_XLS) {
-					/** @var SpreadsheetReader_XLS|bool $handle */
-
-					$handle -> ChangeSheet(0);
-				} else {
+//				if ($handle instanceof SpreadsheetReader_XLSX) {
+//					$handle = $this -> Handle;
+//					/** @var SpreadsheetReader_XLSX|bool $handle */
+//
+//					$handle -> ChangeSheet(0);
+//				} elseif ($handle instanceof SpreadsheetReader_ODS) {
+//					/** @var SpreadsheetReader_ODS|bool $handle */
+//
+//					$handle -> ChangeSheet(0);
+//				} elseif ($handle instanceof SpreadsheetReader_XLS) {
+//					/** @var SpreadsheetReader_XLS|bool $handle */
+//
+//					$handle -> ChangeSheet(0);
+//				} else {
 					$this -> Handle -> rewind();
-				}
+				//}
 			}
 		}
 
@@ -283,21 +285,21 @@ namespace SpreadsheetReader;
 			{
 				$this -> Index++;
 
-				if ($handle instanceof SpreadsheetReader_XLSX) {
-					/** @var bool|SpreadsheetReader_XLSX $handle */
-
-					$handle -> ChangeSheet($this -> Index);
-				} elseif ($handle instanceof SpreadsheetReader_XLS) {
-					/** @var bool|SpreadsheetReader_XLS $handle */
-
-					$handle -> ChangeSheet($this -> Index);
-				} elseif ($handle instanceof SpreadsheetReader_ODS) {
-					/** @var bool|SpreadsheetReader_ODS $handle */
-
-					$handle -> ChangeSheet($this -> Index);
-				} else {
+//				if ($handle instanceof SpreadsheetReader_XLSX) {
+//					/** @var bool|SpreadsheetReader_XLSX $handle */
+//
+//					$handle -> ChangeSheet($this -> Index);
+//				} elseif ($handle instanceof SpreadsheetReader_XLS) {
+//					/** @var bool|SpreadsheetReader_XLS $handle */
+//
+//					$handle -> ChangeSheet($this -> Index);
+//				} elseif ($handle instanceof SpreadsheetReader_ODS) {
+//					/** @var bool|SpreadsheetReader_ODS $handle */
+//
+//					$handle -> ChangeSheet($this -> Index);
+//				} else {
 					return $handle -> next();
-				}
+				//}
 			}
 			return null;
 		}

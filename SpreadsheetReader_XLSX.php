@@ -10,7 +10,7 @@ use XMLReader;
  *
  * @author Martins Pilsetnieks
  */
-	class SpreadsheetReader_XLSX implements \Iterator, \Countable
+	class SpreadsheetReader_XLSX extends AbstractSpreadsheetReader implements \Iterator, \Countable
 	{
 		const CELL_TYPE_BOOL = 'b';
 		const CELL_TYPE_NUMBER = 'n';
@@ -401,6 +401,9 @@ use XMLReader;
 		{
 			$RealSheetIndex = false;
 			$Sheets = $this -> Sheets();
+
+			$this->setCurrentSheet($Index);
+
 			if (isset($Sheets[$Index]))
 			{
 				$SheetIndexes = array_keys($this -> Sheets);

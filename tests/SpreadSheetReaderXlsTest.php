@@ -23,13 +23,15 @@ class SpreadSheetReaderXlsTest extends \PHPUnit_Framework_TestCase
 	public function testXlsSheets()
 	{
 		$reader = new SpreadsheetReader(DATA_XLS . 'sheets.xls');
+		$handle = $reader->getHandle();
+		/** @var bool|SpreadsheetReader_XLS $handle */
 
 		$sheets = $reader -> Sheets();
 
-		$this->assertTrue(count($sheets) == 3,'Checking sheets count');
+		$this->assertTrue(count($sheets) == 3,'Expected sheets count value is 3 instead fo ' . count($sheets));
 
 		$reader->ChangeSheet(1);
-		$this->assertTrue($reader->GetSheetIndex() == 1, 'Checking sheet index');
+		$this->assertTrue($handle->getCurrentSheet() == 1, 'Expected sheet index is 1, instead of ' . $handle->getCurrentSheet());
 
 		unset($reader);
 	}
@@ -37,14 +39,16 @@ class SpreadSheetReaderXlsTest extends \PHPUnit_Framework_TestCase
 	public function testXlsSheetsIterations()
 	{
 		$reader = $this->getReader();
+		$handle = $reader->getHandle();
+		/** @var bool|SpreadsheetReader_XLS $handle */
 
-		$this->assertTrue($reader->GetSheetIndex() == 0, 'Initial');
+		$this->assertTrue($handle->getCurrentSheet() == 0, 'Expected sheet index is 0, but at the moment is ' . $handle->getCurrentSheet());
 		$reader->next();
 
-		$this->assertTrue($reader->GetSheetIndex() == 0, 'After next');
+		$this->assertTrue($handle->getCurrentSheet() == 0, 'Expected sheet index is 0, but at the moment is ' . $handle->getCurrentSheet());
 		$reader->rewind();
 
-		$this->assertTrue($reader->GetSheetIndex() == 0, 'After rewind');
+		$this->assertTrue($handle->getCurrentSheet() == 0, 'Expected sheet index is 0, but at the moment is ' . $handle->getCurrentSheet());
 	}
 
 	public function testXlsRowsIterations()
@@ -55,33 +59,33 @@ class SpreadSheetReaderXlsTest extends \PHPUnit_Framework_TestCase
 		/** @var array|SpreadsheetReader_XLS $handle */
 
 		$array = $handle -> current();
-		$this->assertTrue($reader->GetSheetIndex() == 1, 'Is sheet index also set to 0');
-		$this->assertTrue($handle->key() == 0, 'Is row index also set to 0');
-		$this->assertTrue($array[0] == 2, 'Condition ' . $array[0] . ' == 2 failed');
+		$this->assertTrue($handle->getCurrentSheet() == 1, 'Expected sheet index is 0, instead of ' . $handle->getCurrentSheet());
+		$this->assertTrue($handle->key() == 0, 'Expected row index is 0, instead of ' . $handle -> key ());
+		$this->assertTrue($array[0] == 2, 'Expected value is 2, instead of ' . $array[0]);
 
 		$reader -> rewind();
 
-		$this->assertTrue($reader->GetSheetIndex() == 1, 'Is sheet index also set to 1');
-		$this->assertTrue($handle->key() == 0, 'Is row index also set to 0');
+		$this->assertTrue($handle->getCurrentSheet() == 1, 'Expected sheet index is 1, instead of ' . $handle->getCurrentSheet());
+		$this->assertTrue($handle->key() == 0, 'Expected row index is 0, instead of ' . $handle->key());
 		$array = $handle -> current();
 
-		$this->assertTrue($array[0] == 2, 'Condition ' . $array[0] . ' == 1 failed');
+		$this->assertTrue($array[0] == 2, 'Expected value is 2, instead of ' . $array[0]);
 		//print_r($array);
 
 		$reader -> next();
-		$this->assertTrue($reader->GetSheetIndex() == 1, 'Is sheet index also set to 1');
-		$this->assertTrue($handle->key() == 1, 'Is row index should be 1 instead of ' . $handle->key());
+		$this->assertTrue($handle->getCurrentSheet() == 1, 'Expected sheet index is 1, instead of ' . $handle->getCurrentSheet());
+		$this->assertTrue($handle->key() == 1, 'Expected row index is 1 instead of ' . $handle->key());
 		$array = $handle -> current();
 
 		$this->assertTrue(isset($array[0]), 'Array value is not set');
-		$this->assertTrue($array[0] == 2, 'Condition ' . $array[0] . ' == 2 failed');
+		$this->assertTrue($array[0] == 2, 'Expected  ' . $array[0] . ' == 2 failed');
 
 		$reader -> ChangeSheet(2);
-		$this->assertTrue($reader->GetSheetIndex() == 2, 'Is sheet index also set to 2, is ' . $reader->GetSheetIndex());
-		$this->assertTrue($handle->key() == 0, 'Is row index should be 0 instead of ' . $handle->key());
+		$this->assertTrue($handle->getCurrentSheet() == 2, 'Expected sheet index is 2, instead of ' . $handle->getCurrentSheet());
+		$this->assertTrue($handle->key() == 0, 'Expected row index is 0 instead of ' . $handle->key());
 
 		$array = $handle -> current();
-		$this->assertTrue($array[0] == 3, 'Condition ' . $array[0] . ' == 3 failed');
+		$this->assertTrue($array[0] == 3, 'Expected value is 3 instead of ' . $array[0]);
 	}
 
 	public function testSeeking()
@@ -92,7 +96,7 @@ class SpreadSheetReaderXlsTest extends \PHPUnit_Framework_TestCase
 
 		$reader -> ChangeSheet(1);
 
-		$this->assertEquals($reader->GetSheetIndex(), 1, 'Expected sheet position is 1, instead of ' . $reader->GetSheetIndex());
+		$this->assertEquals($handle->getCurrentSheet(), 1, 'Expected sheet position is 1, instead of ' . $handle->getCurrentSheet());
 		$this->assertEquals($handle-> key(), 0, 'Expected sheet position is 0, instead of ' . $handle -> key());
 
 		$reader -> seek(30);
@@ -104,9 +108,10 @@ class SpreadSheetReaderXlsTest extends \PHPUnit_Framework_TestCase
 
 		$reader -> rewind();
 
-		$this->assertEquals($reader->GetSheetIndex(), 0, 'Expected sheet position is 1, instead of ' . $reader->GetSheetIndex());
+		$this->assertEquals($handle->getCurrentSheet(), 1, 'Expected sheet position is 1, instead of ' . $handle->getCurrentSheet());
 		$this->assertEquals($handle-> key(), 0, 'Expected sheet position is 0, instead of ' . $handle -> key());
 
+		$reader -> ChangeSheet(0);
 		$reader -> seek(5);
 		$array = $handle -> current();
 

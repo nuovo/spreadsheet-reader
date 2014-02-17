@@ -25,7 +25,7 @@ class SpreadSheetReaderCsvTest extends \PHPUnit_Framework_TestCase
 		$reader = $this->getReader();
 		$sheets = $reader -> Sheets();
 
-		$this->assertTrue(count($sheets) == 1, 'Wrong sheets count');
+		$this->assertTrue(count($sheets) == 1, 'Expected total sheets count is 1, instead of ' . count($sheets));
 
 		//@todo implement out of boundary check
 		//$reader->ChangeSheet(2);
@@ -40,15 +40,15 @@ class SpreadSheetReaderCsvTest extends \PHPUnit_Framework_TestCase
 		/** @var array|SpreadsheetReader_CSV $handle */
 
 		$array = $handle -> current();
-		$this->assertTrue($array[0] == 1, 'Condition ' . $array[0] . ' == 1 failed');
+		$this->assertEquals($array[0], 1, 'Expected value is 1 instead of ' . $array[0]);
 
 		$reader -> next();
 		$array = $handle -> current();
-		$this->assertTrue($array[0] == 2, 'Condition ' . $array[0] . ' == 2 failed');
+		$this->assertEquals($array[0], 2, 'Expected value is 2 instead of ' . $array[0]);
 
 		$reader -> rewind();
 		$array = $handle -> current();
-		$this->assertTrue($array[0] == 1, 'Condition ' . $array[0] . ' == 1 failed');
+		$this->assertEquals($array[0], 1, 'Expected value is 1 instead of ' . $array[0]);
 	}
 
 	public function testSeeking()
@@ -57,7 +57,7 @@ class SpreadSheetReaderCsvTest extends \PHPUnit_Framework_TestCase
 		$handle = $reader -> getHandle();
 		/** @var array|SpreadsheetReader_CSV $handle */
 
-		$this->assertEquals($reader->GetSheetIndex(), 0, 'Expected sheet position is 1, instead of ' . $reader->GetSheetIndex());
+		$this->assertEquals($handle->getCurrentSheet(), 0, 'Expected sheet position is 1, instead of ' . $handle->getCurrentSheet());
 		$this->assertEquals($handle-> key(), 0, 'Expected sheet position is 0, instead of ' . $handle -> key());
 
 		$reader -> seek(30);
@@ -66,7 +66,7 @@ class SpreadSheetReaderCsvTest extends \PHPUnit_Framework_TestCase
 
 		$reader -> rewind();
 
-		$this->assertEquals($reader->GetSheetIndex(), 0, 'Expected sheet position is 1, instead of ' . $reader->GetSheetIndex());
+		$this->assertEquals($handle->getCurrentSheet(), 0, 'Expected sheet position is 1, instead of ' . $handle->getCurrentSheet());
 		$this->assertEquals($handle-> key(), 0, 'Expected sheet position is 0, instead of ' . $handle -> key());
 
 		$reader -> seek(4);

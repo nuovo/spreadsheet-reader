@@ -3,7 +3,11 @@
 <project name="spreadsheet-reader" default="build">
 
     <target name="test">
-        <exec command="phpunit --configuration ./tests/phpunit.xml --bootstrap ./tests/Bootstrap.php ./tests/" logoutput="/dev/stdout" />
+        <exec command="phpunit --configuration ./tests/phpunit.xml --bootstrap ./tests/Bootstrap.php ./tests" logoutput="/dev/stdout" />
+    </target>
+
+    <target name="coverage-report">
+        <exec command="phpunit --bootstrap ./tests/Bootstrap.php --coverage-html ./tests/coverage-reports/ ./tests" logoutput="/dev/stdout" />
     </target>
 
     <target name="build">

@@ -6,7 +6,7 @@ use SpreadsheetReader\xls\XlsReader as XlsReader;
 
 include_once 'xls/XlsReader.php';
 
-class SpreadsheetReader_XLS implements \Iterator, \Countable {
+class SpreadsheetReader_XLS extends AbstractSpreadsheetReader implements \Iterator, \Countable {
     /**
      * @var array Options array, pre-populated with the default values.
      */
@@ -123,8 +123,11 @@ class SpreadsheetReader_XLS implements \Iterator, \Countable {
     {
         $Index = (int)$Index;
         $Sheets = $this -> Sheets();
+		$this->setIndex(0);
 
         if (isset($Sheets[$Index])) {
+			$this->setCurrentSheet($Index);
+
             $this -> rewind();
             $this -> CurrentSheet = $this -> SheetIndexes[$Index];
 
@@ -141,7 +144,6 @@ class SpreadsheetReader_XLS implements \Iterator, \Countable {
 
             //Unset data
             unset($this->data);
-            $this->Index = 0;
 
             return true;
         } else {
@@ -184,6 +186,7 @@ class SpreadsheetReader_XLS implements \Iterator, \Countable {
         if ($this -> Index == 0)
         {
             $this -> next();
+			$this -> Index--;
         }
 
         return $this -> CurrentRow;
