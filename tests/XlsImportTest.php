@@ -30,6 +30,9 @@ class TestXlsImport extends \PHPUnit_Framework_TestCase
                 ),
         ));
 
+		//echo "\n" . json_encode($a) . "\n";
+		//echo json_encode($b);
+
         $this->assertTrue($this->arraysEqual($a, $b));
     }
 
@@ -136,11 +139,11 @@ class TestXlsImport extends \PHPUnit_Framework_TestCase
             5 => 5,
         );
 
-        $sheet = 1;
+        /*$sheet = 1;
         $b[$sheet] = array(array());
 
         $sheet = 2;
-        $b[$sheet] = array(array());
+        $b[$sheet] = array(array());*/
 
         //echo "\n" . json_encode($a) . "\n";
         //echo json_encode($b);

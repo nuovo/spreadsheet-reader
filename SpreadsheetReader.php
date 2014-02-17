@@ -385,7 +385,7 @@ include_once 'AbstractSpreadsheetReader.php';
 		/**
 		 * @return array
 		 */
-		public function getSupportedTypes()
+		private static function getSupportedTypes()
 		{
 			return self::$supportedTypes;
 		}

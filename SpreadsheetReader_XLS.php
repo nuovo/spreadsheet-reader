@@ -185,8 +185,8 @@ class SpreadsheetReader_XLS extends AbstractSpreadsheetReader implements \Iterat
     {
         if ($this -> Index == 0)
         {
-            $this -> next();
-			$this -> Index--;
+            $this -> readRecord();
+			//$this -> Index--;
         }
 
         return $this -> CurrentRow;
@@ -203,28 +203,33 @@ class SpreadsheetReader_XLS extends AbstractSpreadsheetReader implements \Iterat
         //	present at all
         $this -> Index++;
 
-        if (!isset($this->data[$this->Index])) {
-            $this->data = $this -> Handle -> getRowValuesByIndex(
-                $this -> CurrentSheet,
-                $this -> Index
-            );
-        }
-
-        if ($this -> Error) {
-            return array();
-        } else {
-            if (!isset($this->data[$this->Index])) {
-                $this -> CurrentRow = $this -> EmptyRow;
-            } else {
-                $this -> CurrentRow = $this->data[$this->Index] + $this -> EmptyRow;
-                ksort($this -> CurrentRow);
-
-                $this -> CurrentRow = array_values($this -> CurrentRow);
-            }
-
-            return $this -> CurrentRow;
-        }
+		return $this->readRecord();
     }
+
+	protected function readRecord()
+	{
+		if (!isset($this->data[$this->Index])) {
+			$this->data = $this -> Handle -> getRowValuesByIndex(
+				$this -> CurrentSheet,
+				$this -> Index
+			);
+		}
+
+		if ($this -> Error) {
+			return array();
+		} else {
+			if (!isset($this->data[$this->Index])) {
+				$this -> CurrentRow = $this -> EmptyRow;
+			} else {
+				$this -> CurrentRow = $this->data[$this->Index] + $this -> EmptyRow;
+				ksort($this -> CurrentRow);
+
+				$this -> CurrentRow = array_values($this -> CurrentRow);
+			}
+
+			return $this -> CurrentRow;
+		}
+	}
 
     /**
      * Return the identifying key of the current element.
@@ -249,7 +254,8 @@ class SpreadsheetReader_XLS extends AbstractSpreadsheetReader implements \Iterat
         {
             return false;
         }
-        return ($this -> Index <= $this -> RowCount);
+
+		return ($this -> Index + 1 <= $this -> RowCount);
     }
 
     // !Countable interface method
