@@ -10,6 +10,15 @@
         <exec command="phpunit --bootstrap ./tests/Bootstrap.php --coverage-html ./tests/coverage-reports/ ./tests" logoutput="/dev/stdout" />
     </target>
 
+    <target name="phpmd">
+        <phpmd>
+            <fileset dir="./">
+                <include name="**/*.php" />
+            </fileset>
+            <formatter type="text" outfile="dev/reports/pmd.txt"/>
+        </phpmd>
+    </target>
+
     <target name="build">
         <echo msg="Building something" />
     </target>
