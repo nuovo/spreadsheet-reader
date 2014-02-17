@@ -20,7 +20,7 @@ include_once 'AbstractSpreadsheetReader.php';
 		/**
 		 * @var array
 		 */
-		protected $supportedTypes = array(
+		protected static $supportedTypes = array(
 			self::TYPE_XLSX,
 			self::TYPE_XLS,
 			self::TYPE_CSV,
@@ -387,7 +387,7 @@ include_once 'AbstractSpreadsheetReader.php';
 		 */
 		public function getSupportedTypes()
 		{
-			return $this->supportedTypes;
+			return self::$supportedTypes;
 		}
 	}
 ?>
