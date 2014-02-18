@@ -2,18 +2,30 @@
 
 namespace SpreadsheetReader;
 
+include_once 'AbstractSpreadsheetReader.php';
+
 /**
  * Main class for spreadsheet reading
  *
  * @version 0.5.6
  * @author Martins Pilsetnieks
  */
-	class SpreadsheetReader implements \Iterator, \Countable
+	class SpreadsheetReader implements \SeekableIterator, \Countable
 	{
 		const TYPE_XLSX = 'XLSX';
 		const TYPE_XLS = 'XLS';
 		const TYPE_CSV = 'CSV';
 		const TYPE_ODS = 'ODS';
+
+		/**
+		 * @var array
+		 */
+		protected static $supportedTypes = array(
+			self::TYPE_XLSX,
+			self::TYPE_XLS,
+			self::TYPE_CSV,
+			self::TYPE_ODS
+		);
 
 		private $Options = array(
 			'Delimiter' => '',
@@ -182,6 +194,14 @@ namespace SpreadsheetReader;
 		}
 
 		/**
+		 * @return int
+		 */
+		public function GetSheetIndex()
+		{
+			return $this -> Handle ->getCurrentSheet();
+		}
+
+		/**
 		 * Changes the current sheet to another from the file.
 		 *	Note that changing the sheet will rewind the file to the beginning, even if
 		 *	the current sheet index is provided.
@@ -204,14 +224,15 @@ namespace SpreadsheetReader;
          */
         private static function Load($Type)
 		{
-			if (!in_array($Type, array(self::TYPE_XLSX, self::TYPE_XLS, self::TYPE_CSV, self::TYPE_ODS)))
+			if (!in_array($Type, self::getSupportedTypes()))
 			{
 				throw new \Exception('SpreadsheetReader: Invalid type ('.$Type.')');
 			}
 
-			if (!class_exists('SpreadsheetReader_'.$Type))
+			$className = sprintf('SpreadsheetReader_%s', $Type);
+			if (!class_exists($className, false))
 			{
-				include_once(dirname(__FILE__).DIRECTORY_SEPARATOR.'SpreadsheetReader_'.$Type.'.php');
+				include_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . $className . '.php');
 			}
 		}
 
@@ -224,7 +245,9 @@ namespace SpreadsheetReader;
 		public function rewind()
 		{
 			$this -> Index = 0;
-			if ($this -> Handle)
+			$handle = $this -> Handle;
+
+			if ($handle)
 			{
 				$this -> Handle -> rewind();
 			}
@@ -251,11 +274,11 @@ namespace SpreadsheetReader;
 		 */ 
 		public function next()
 		{
-			if ($this -> Handle)
+			$handle = $this -> Handle;
+			if ($handle)
 			{
 				$this -> Index++;
-
-				return $this -> Handle -> next();
+				return $handle -> next();
 			}
 			return null;
 		}
@@ -274,6 +297,49 @@ namespace SpreadsheetReader;
 			}
 			return null;
 		}
+
+		/**
+		 * (PHP 5 &gt;= 5.1.0)<br/>
+		 * Seeks to a position
+		 * @link http://php.net/manual/en/seekableiterator.seek.php
+		 * @param int $position <p>
+		 * @throws \Exception
+		 * The position to seek to.
+		 * </p>
+		 * @return void
+		 */
+		public function seek($position)
+		{
+			$handle = $this -> Handle;
+
+			if (!$handle) {
+				return null;
+			}
+
+			if ($position != $handle -> key()) {
+				if (0 == $position) {
+					$this -> rewind();
+					return;
+				} elseif ($position > 0) {
+					if ($handle -> key() === 0 || $position < $handle -> key()) {
+						$handle -> rewind();
+					}
+
+					while ($handle -> next()) {
+						if ($handle -> count() < $handle -> key()) {
+							break;
+						}
+
+						if ($handle -> key() == $position) {
+							return;
+						}
+					}
+				}
+
+				throw new \Exception('Seek position out of range');
+			}
+		}
+
 
 		/** 
 		 * Check if there is a current element after calls to rewind() or next().
@@ -298,6 +364,30 @@ namespace SpreadsheetReader;
 				return $this -> Handle -> count();
 			}
 			return 0;
+		}
+
+		/**
+		 * @return \SpreadsheetReader\SpreadsheetReader_
+		 */
+		public function getHandle()
+		{
+			return $this->Handle;
+		}
+
+		/**
+		 * @return \SpreadsheetReader\TYPE_
+		 */
+		public function getType()
+		{
+			return $this->Type;
+		}
+
+		/**
+		 * @return array
+		 */
+		private static function getSupportedTypes()
+		{
+			return self::$supportedTypes;
 		}
 	}
 ?>

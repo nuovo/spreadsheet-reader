@@ -6,7 +6,7 @@ use SpreadsheetReader\xls\XlsReader as XlsReader;
 
 include_once 'xls/XlsReader.php';
 
-class SpreadsheetReader_XLS implements \Iterator, \Countable {
+class SpreadsheetReader_XLS extends AbstractSpreadsheetReader implements \Iterator, \Countable {
     /**
      * @var array Options array, pre-populated with the default values.
      */
@@ -123,8 +123,11 @@ class SpreadsheetReader_XLS implements \Iterator, \Countable {
     {
         $Index = (int)$Index;
         $Sheets = $this -> Sheets();
+		$this->setIndex(0);
 
         if (isset($Sheets[$Index])) {
+			$this->setCurrentSheet($Index);
+
             $this -> rewind();
             $this -> CurrentSheet = $this -> SheetIndexes[$Index];
 
@@ -141,7 +144,6 @@ class SpreadsheetReader_XLS implements \Iterator, \Countable {
 
             //Unset data
             unset($this->data);
-            $this->Index = 0;
 
             return true;
         } else {
@@ -168,6 +170,9 @@ class SpreadsheetReader_XLS implements \Iterator, \Countable {
     public function rewind()
     {
         $this -> Index = 0;
+
+		//Will be sheet offset used for this
+		$this -> Handle -> setStartPosition(null);
     }
 
     /**
@@ -180,7 +185,8 @@ class SpreadsheetReader_XLS implements \Iterator, \Countable {
     {
         if ($this -> Index == 0)
         {
-            $this -> next();
+            $this -> readRecord();
+			//$this -> Index--;
         }
 
         return $this -> CurrentRow;
@@ -197,28 +203,33 @@ class SpreadsheetReader_XLS implements \Iterator, \Countable {
         //	present at all
         $this -> Index++;
 
-        if (!isset($this->data[$this->Index])) {
-            $this->data = $this -> Handle -> getRowValuesByIndex(
-                $this -> CurrentSheet,
-                $this -> Index
-            );
-        }
-
-        if ($this -> Error) {
-            return array();
-        } else {
-            if (!isset($this->data[$this->Index])) {
-                $this -> CurrentRow = $this -> EmptyRow;
-            } else {
-                $this -> CurrentRow = $this->data[$this->Index] + $this -> EmptyRow;
-                ksort($this -> CurrentRow);
-
-                $this -> CurrentRow = array_values($this -> CurrentRow);
-            }
-
-            return $this -> CurrentRow;
-        }
+		return $this->readRecord();
     }
+
+	protected function readRecord()
+	{
+		if (!isset($this->data[$this->Index])) {
+			$this->data = $this -> Handle -> getRowValuesByIndex(
+				$this -> CurrentSheet,
+				$this -> Index
+			);
+		}
+
+		if ($this -> Error) {
+			return array();
+		} else {
+			if (!isset($this->data[$this->Index])) {
+				$this -> CurrentRow = $this -> EmptyRow;
+			} else {
+				$this -> CurrentRow = $this->data[$this->Index] + $this -> EmptyRow;
+				ksort($this -> CurrentRow);
+
+				$this -> CurrentRow = array_values($this -> CurrentRow);
+			}
+
+			return $this -> CurrentRow;
+		}
+	}
 
     /**
      * Return the identifying key of the current element.
@@ -243,7 +254,8 @@ class SpreadsheetReader_XLS implements \Iterator, \Countable {
         {
             return false;
         }
-        return ($this -> Index <= $this -> RowCount);
+
+		return ($this -> Index + 1 <= $this -> RowCount);
     }
 
     // !Countable interface method

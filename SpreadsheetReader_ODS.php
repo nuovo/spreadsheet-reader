@@ -1,12 +1,16 @@
 <?php
 namespace SpreadsheetReader;
 
+use Exception;
+use XMLReader;
+use ZipArchive;
+
 /**
  * Class for parsing ODS files
  *
  * @author Martins Pilsetnieks
  */
-	class SpreadsheetReader_ODS implements \Iterator, \Countable
+class SpreadsheetReader_ODS extends AbstractSpreadsheetReader implements \Iterator, \Countable
 	{
 		private $Options = array(
 			'TempDir' => '',
@@ -36,6 +40,14 @@ namespace SpreadsheetReader;
 
 		private $TableOpen = false;
 		private $RowOpen = false;
+
+		protected $CurrentRow = array();
+
+		/**
+		 * @var null|XMLReader $SheetReader
+		 */
+		protected $SheetReader = null;
+
 
 		/**
 		 * @param string Path to file
@@ -79,6 +91,7 @@ namespace SpreadsheetReader;
 				$this -> Content -> open($this -> ContentPath);
 				$this -> Valid = true;
 			}
+
 		}
 
 		/**
@@ -122,10 +135,11 @@ namespace SpreadsheetReader;
 							$this -> SheetReader -> next();
 						}
 					}
-					
+
 					$this -> SheetReader -> close();
 				}
 			}
+
 			return $this -> Sheets;
 		}
 
@@ -153,24 +167,25 @@ namespace SpreadsheetReader;
 		}
 
 		// !Iterator interface methods
-		/** 
+		/**
 		 * Rewind the Iterator to the first element.
 		 * Similar to the reset() function for arrays in PHP
-		 */ 
+		 */
 		public function rewind()
 		{
-			if ($this -> Index > 0)
-			{
+			//if ($this -> Index > 0)
+			//{
 				// If the worksheet was already iterated, XML file is reopened.
 				// Otherwise it should be at the beginning anyway
 				$this -> Content -> close();
 				$this -> Content -> open($this -> ContentPath);
 				$this -> Valid = true;
+			//}
 
-				$this -> TableOpen = false;
-				$this -> RowOpen = false;
-			}
+			$this -> TableOpen = false;
+			$this -> RowOpen = false;
 
+			$this -> CurrentRow = array();
 			$this -> Index = 0;
 		}
 
@@ -187,19 +202,26 @@ namespace SpreadsheetReader;
 				$this -> next();
 				$this -> Index--;
 			}
+
 			return $this -> CurrentRow;
 		}
 
-		/** 
-		 * Move forward to next element. 
-		 * Similar to the next() function for arrays in PHP 
-		 */ 
+		/**
+		 * Move forward to next element.
+		 * Similar to the next() function for arrays in PHP
+		 */
 		public function next()
 		{
 			$this -> Index++;
 
 			$this -> CurrentRow = array();
+			$this->findRecord();
 
+			return $this -> CurrentRow;
+		}
+
+		public function findRecord()
+		{
 			if (!$this -> TableOpen)
 			{
 				$TableCounter = 0;
@@ -207,6 +229,7 @@ namespace SpreadsheetReader;
 
 				while ($this -> Valid = ($SkipRead || $this -> Content -> read()))
 				{
+
 					if ($SkipRead)
 					{
 						$SkipRead = false;
@@ -214,8 +237,10 @@ namespace SpreadsheetReader;
 
 					if ($this -> Content -> name == 'table:table' && $this -> Content -> nodeType != XMLReader::END_ELEMENT)
 					{
+
 						if ($TableCounter == $this -> CurrentSheet)
 						{
+							//echo $this->Content->getAttribute('table:style-name') . '<br>';
 							$this -> TableOpen = true;
 							break;
 						}
@@ -231,7 +256,9 @@ namespace SpreadsheetReader;
 			{
 				while ($this -> Valid = $this -> Content -> read())
 				{
-					switch ($this -> Content -> name)
+					$content = $this -> Content;
+
+					switch ($content->name)
 					{
 						case 'table:table':
 							$this -> TableOpen = false;
@@ -273,12 +300,12 @@ namespace SpreadsheetReader;
 								$this -> CurrentRow[] = $LastCellContent;
 
 								if ($this -> Content -> getAttribute('table:number-columns-repeated') !== null)
-								{                                                                                            
+								{
 									$RepeatedColumnCount = $this -> Content -> getAttribute('table:number-columns-repeated');
 									// Checking if larger than one because the value is already added to the row once before
 									if ($RepeatedColumnCount > 1)
 									{
-										$this -> CurrentRow = array_pad($this -> CurrentRow, count($this -> CurrentRow) + $RepeatedColumnCount - 1, $LastCellContent);
+										$this -> CurrentRow = array_pad($this -> CurrentRow, count($this -> CurrentRow) + (int)$RepeatedColumnCount - 1, $LastCellContent);
 									}
 								}
 							}
@@ -298,27 +325,25 @@ namespace SpreadsheetReader;
 					}
 				}
 			}
-
-			return $this -> CurrentRow;
 		}
 
-		/** 
+		/**
 		 * Return the identifying key of the current element.
 		 * Similar to the key() function for arrays in PHP
 		 *
 		 * @return mixed either an integer or a string
-		 */ 
+		 */
 		public function key()
 		{
 			return $this -> Index;
 		}
 
-		/** 
+		/**
 		 * Check if there is a current element after calls to rewind() or next().
 		 * Used to check if we've iterated to the end of the collection
 		 *
 		 * @return boolean FALSE if there's nothing more to iterate over
-		 */ 
+		 */
 		public function valid()
 		{
 			return $this -> Valid;
@@ -332,6 +357,14 @@ namespace SpreadsheetReader;
 		public function count()
 		{
 			return $this -> Index + 1;
+		}
+
+		/**
+		 * @return int
+		 */
+		public function getCurrentSheet()
+		{
+			return $this->CurrentSheet;
 		}
 	}
 ?>
