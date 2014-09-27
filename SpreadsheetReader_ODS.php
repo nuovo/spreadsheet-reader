@@ -35,12 +35,13 @@
 		private $TableOpen = false;
 		private $RowOpen = false;
 
-		/**
-		 * @param string Path to file
-		 * @param array Options:
-		 *	TempDir => string Temporary directory path
-		 *	ReturnDateTimeObjects => bool True => dates and times will be returned as PHP DateTime objects, false => as strings
-		 */
+        /**
+         * @param $Filepath
+         * @param array $Options Options:
+         *    TempDir => string Temporary directory path
+         *    ReturnDateTimeObjects => bool True => dates and times will be returned as PHP DateTime objects, false => as strings
+         * @throws Exception
+         */
 		public function __construct($Filepath, array $Options = null)
 		{
 			if (!is_readable($Filepath))
@@ -258,14 +259,9 @@
 						case 'table:table-cell':
 							if ($this -> Content -> nodeType == XMLReader::END_ELEMENT || $this -> Content -> isEmptyElement)
 							{
-								if ($this -> Content -> nodeType == XMLReader::END_ELEMENT)
-								{
-									$CellValue = $LastCellContent;
-								}
-								elseif ($this -> Content -> isEmptyElement)
+								if ($this -> Content -> isEmptyElement)
 								{
 									$LastCellContent = '';
-									$CellValue = $LastCellContent;
 								}
 
 								$this -> CurrentRow[] = $LastCellContent;
@@ -284,6 +280,7 @@
 							{
 								$LastCellContent = '';
 							}
+                            break;
 						case 'text:p':
 							if ($this -> Content -> nodeType != XMLReader::END_ELEMENT)
 							{
