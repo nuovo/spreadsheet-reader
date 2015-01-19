@@ -406,6 +406,12 @@
 			if ($RealSheetIndex !== false && is_readable($TempWorksheetPath))
 			{
 				$this -> WorksheetPath = $TempWorksheetPath;
+				if ($this -> Worksheet instanceof XMLReader)
+				{
+                                    $this -> Worksheet -> close();
+                                }
+                                $this -> Worksheet = null;
+				
 				$this -> rewind();
 				return true;
 			}
