@@ -25,6 +25,8 @@
 		 */
 		private $Sheets = false;
 
+		private $CurrentRow = false;
+
 		/**
 		 * @var int Number of the sheet we're currently reading
 		 */
