@@ -1,3 +1,8 @@
+### v.0.5.7  2013-10-29
+
+- Attempt to replicate Excel's "General" format in XLSX files that is applied to otherwise unformatted cells.
+Currently only decimal number values are converted to PHP's floats.
+
 ### v.0.5.6  2013-09-04
 
 - Fix for formulas being returned along with values in XLSX files. (Thanks to [marktag](https://github.com/marktag))

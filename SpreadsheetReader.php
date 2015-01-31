@@ -2,7 +2,7 @@
 /**
  * Main class for spreadsheet reading
  *
- * @version 0.5.6
+ * @version 0.5.7
  * @author Martins Pilsetnieks
  */
 	class SpreadsheetReader implements Iterator, Countable
