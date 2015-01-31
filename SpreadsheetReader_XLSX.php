@@ -1064,6 +1064,7 @@
 							{
 								$Value = $this -> FormatValue($Value, $StyleId);
 							}
+							elseif ($Value)
 
 							$this -> CurrentRow[$Index] = $Value;
 							break;
