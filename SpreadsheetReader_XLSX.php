@@ -104,6 +104,7 @@
 		private $SSForwarded = false;
 
 		private static $BuiltinFormats = array(
+			0 => '',
 			1 => '0',
 			2 => '0.00',
 			3 => '#,##0',
@@ -263,7 +264,8 @@
 				{
 					foreach ($this -> StylesXML -> cellXfs -> xf as $Index => $XF)
 					{
-						if ($XF -> attributes() -> applyNumberFormat)
+						// Format #0 is a special case - it is the "General" format that is applied regardless of applyNumberFormat
+						if ($XF -> attributes() -> applyNumberFormat || (0 == (int)$XF -> attributes() -> numFmtId))
 						{
 							$FormatId = (int)$XF -> attributes() -> numFmtId;
 							// If format ID >= 164, it is a custom format and should be read from styleSheet\numFmts
@@ -271,7 +273,8 @@
 						}
 						else
 						{
-							$this -> Styles[] = false;
+							// 0 for "General" format
+							$this -> Styles[] = 0;
 						}
 					}
 				}
@@ -611,14 +614,20 @@
 			{
 				return $Value;
 			}
-
-			if (!empty($this -> Styles[$Index]))
+			
+			if (isset($this -> Styles[$Index]) && ($this -> Styles[$Index] !== false))
 			{
 				$Index = $this -> Styles[$Index];
 			}
 			else
 			{
 				return $Value;
+			}
+
+			// A special case for the "General" format
+			if ($Index == 0)
+			{
+				return $this -> GeneralFormat($Value);
 			}
 
 			$Format = array();
@@ -905,6 +914,23 @@
 			return $Value;
 		}
 
+		/**
+		 * Attempts to approximate Excel's "general" format.
+		 *
+		 * @param mixed Value
+		 *
+		 * @return mixed Result
+		 */
+		public function GeneralFormat($Value)
+		{
+			// Numeric format
+			if (is_numeric($Value))
+			{
+				$Value = (float)$Value;
+			}
+			return $Value;
+		}
+
 		// !Iterator interface methods
 		/** 
 		 * Rewind the Iterator to the first element.
@@ -1065,6 +1091,9 @@
 								$Value = $this -> FormatValue($Value, $StyleId);
 							}
 							elseif ($Value)
+							{
+								$Value = $this -> GeneralFormat($Value);
+							}
 
 							$this -> CurrentRow[$Index] = $Value;
 							break;
