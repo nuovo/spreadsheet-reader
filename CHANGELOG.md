@@ -1,3 +1,12 @@
+### v.0.5.8  2015-01-31
+
+- [Issue #50](https://github.com/nuovo/spreadsheet-reader/issues/50): Fixed an XLSX rewind issue. (Thanks to [osuwariboy](https://github.com/osuwariboy))
+- [Issue #52](https://github.com/nuovo/spreadsheet-reader/issues/52), [#53](https://github.com/nuovo/spreadsheet-reader/issues/53): Apache POI compatibility for XLSX. (Thanks to [dimapashkov](https://github.com/dimapashkov))
+- [Issue #61](https://github.com/nuovo/spreadsheet-reader/issues/61): Autoload fix in the main class. (Thanks to [i-bash](https://github.com/i-bash))
+- [Issue #60](https://github.com/nuovo/spreadsheet-reader/issues/60), [#69](https://github.com/nuovo/spreadsheet-reader/issues/69), [#72](https://github.com/nuovo/spreadsheet-reader/issues/72): Fixed an issue where XLSX ChangeSheet may not work. (Thanks to [jtresponse](https://github.com/jtresponse), [osuwariboy](https://github.com/osuwariboy))
+- [Issue #70](https://github.com/nuovo/spreadsheet-reader/issues/70): Added a check for constructor parameter correctness.
+
+
 ### v.0.5.7  2013-10-29
 
 - Attempt to replicate Excel's "General" format in XLSX files that is applied to otherwise unformatted cells.

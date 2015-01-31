@@ -244,7 +244,7 @@
 			}
 
 			$Sheets = $this -> Sheets();
-			
+
 			foreach ($this -> Sheets as $Index => $Name)
 			{
 				if ($Zip -> locateName('xl/worksheets/sheet'.$Index.'.xml') !== false)
@@ -409,6 +409,7 @@
 			if ($RealSheetIndex !== false && is_readable($TempWorksheetPath))
 			{
 				$this -> WorksheetPath = $TempWorksheetPath;
+
 				$this -> rewind();
 				return true;
 			}
@@ -938,25 +939,24 @@
 		 */ 
 		public function rewind()
 		{
-			if ($this -> Index > 0 || !($this -> Worksheet instanceof XMLReader))
+			// Removed the check whether $this -> Index == 0 otherwise ChangeSheet doesn't work properly
+
+			// If the worksheet was already iterated, XML file is reopened.
+			// Otherwise it should be at the beginning anyway
+			if ($this -> Worksheet instanceof XMLReader)
 			{
-				// If the worksheet was already iterated, XML file is reopened.
-				// Otherwise it should be at the beginning anyway
-				if ($this -> Worksheet instanceof XMLReader)
-				{
-					$this -> Worksheet -> close();
-				}
-				else
-				{
-					$this -> Worksheet = new XMLReader;
-				}
-
-				$this -> Worksheet -> open($this -> WorksheetPath);
-				$this -> Valid = true;
-
-				$this -> RowOpen = false;
+				$this -> Worksheet -> close();
+			}
+			else
+			{
+				$this -> Worksheet = new XMLReader;
 			}
 
+			$this -> Worksheet -> open($this -> WorksheetPath);
+
+			$this -> Valid = true;
+			$this -> RowOpen = false;
+			$this -> CurrentRow = false;
 			$this -> Index = 0;
 		}
 
@@ -1073,6 +1073,7 @@
 							break;
 						// Cell value
 						case 'v':
+						case 'is':
 							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
 							{
 								continue;
