@@ -790,8 +790,13 @@
 			// Applying format to value
 			if ($Format)
 			{
+				// String containing digits
+				if ($Format['Type'] === false)
+				{
+					return $Value;
+				}
 				// Percentages
-				if ($Format['Type'] == 'Percentage')
+				elseif ($Format['Type'] == 'Percentage')
 				{
 					if ($Format['Code'] === '0%')
 					{
@@ -887,7 +892,7 @@
 						// Scaling
 						$Value = $Value / $Format['Scale'];
 
-						if ($Format['MinWidth'] && $Format['Decimals'])
+						if (isset($Format['MinWidth']) && $Format['Decimals'])
 						{
 							if ($Format['Thousands'])
 							{
