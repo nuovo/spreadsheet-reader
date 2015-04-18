@@ -2,10 +2,10 @@
 /**
  * Main class for spreadsheet reading
  *
- * @version 0.5.9
+ * @version 0.5.10
  * @author Martins Pilsetnieks
  */
-	class SpreadsheetReader implements Iterator, Countable
+	class SpreadsheetReader implements SeekableIterator, Countable
 	{
 		const TYPE_XLSX = 'XLSX';
 		const TYPE_XLS = 'XLS';
@@ -307,6 +307,42 @@
 				return $this -> Handle -> count();
 			}
 			return 0;
+		}
+
+		/**
+		 * Method for SeekableIterator interface. Takes a posiiton and traverses the file to that position
+		 * The value can be retrieved with a `current()` call afterwards.
+		 *
+		 * @param int Position in file
+		 */
+		public function seek($Position)
+		{
+			if (!$this -> Handle)
+			{
+				throw new OutOfBoundsException('SpreadsheetReader: No file opened');
+			}
+
+			$CurrentIndex = $this -> Handle -> key();
+
+			if ($CurrentIndex != $Position)
+			{
+				if ($Position < $CurrentIndex || is_null($CurrentIndex) || $Position == 0)
+				{
+					$this -> rewind();
+				}
+
+				while ($this -> Handle -> valid() && ($Position > $this -> Handle -> key()))
+				{
+					$this -> Handle -> next();
+				}
+
+				if (!$this -> Handle -> valid())
+				{
+					throw new OutOfBoundsException('SpreadsheetError: Position '.$Position.' not found');
+				}
+			}
+
+			return null;
 		}
 	}
 ?>

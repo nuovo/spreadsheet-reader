@@ -1,3 +1,8 @@
+### v.0.5.10  2015-04-18
+
+- Implemented SeekableIterator. Thanks to [paales](https://github.com/paales) for suggestion ([Issue #54](https://github.com/nuovo/spreadsheet-reader/issues/54) and [Pull request #55](https://github.com/nuovo/spreadsheet-reader/pull/55)).
+- Fixed a bug in CSV and ODS reading where reading position 0 multiple times in a row would result in internal pointer being advanced and reading the next line. (E.g. reading row #0 three times would result in rows #0, #1, and #2.). This could have happened on multiple calls to `current()` while in #0 position, or calls to `seek(0)` and `current()`.
+
 ### v.0.5.9  2015-04-18
 
 - [Pull request #85](https://github.com/nuovo/spreadsheet-reader/pull/85): Fixed an index check. (Thanks to [pa-m](https://github.com/pa-m)).
