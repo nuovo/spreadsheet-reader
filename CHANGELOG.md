@@ -1,3 +1,7 @@
+### v.0.5.9  2015-04-18
+
+- [Pull request #85](https://github.com/nuovo/spreadsheet-reader/pull/85): Fixed an index check. (Thanks to [pa-m](https://github.com/pa-m)).
+
 ### v.0.5.8  2015-01-31
 
 - [Issue #50](https://github.com/nuovo/spreadsheet-reader/issues/50): Fixed an XLSX rewind issue. (Thanks to [osuwariboy](https://github.com/osuwariboy))
