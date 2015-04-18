@@ -26,7 +26,7 @@
 
 		private $Index = 0;
 
-		private $CurrentRow = array();
+		private $CurrentRow = null;
 
 		/**
 		 * @param string Path to file
@@ -159,6 +159,7 @@
 		public function rewind()
 		{
 			fseek($this -> Handle, $this -> BOMLength);
+			$this -> CurrentRow = null;
 			$this -> Index = 0;
 		}
 
@@ -170,7 +171,7 @@
 		 */
 		public function current()
 		{
-			if ($this -> Index == 0)
+			if ($this -> Index == 0 && is_null($this -> CurrentRow))
 			{
 				$this -> next();
 				$this -> Index--;
@@ -184,6 +185,8 @@
 		 */ 
 		public function next()
 		{
+			$this -> CurrentRow = array();
+
 			// Finding the place the next line starts for UTF-16 encoded files
 			// Line breaks could be 0x0D 0x00 0x0A 0x00 and PHP could split lines on the
 			//	first or the second linebreak leaving unnecessary \0 characters that mess up
