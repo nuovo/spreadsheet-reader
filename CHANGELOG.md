@@ -1,3 +1,7 @@
+### v.0.5.11  2015-04-30
+
+- Added a special case for cells formatted as text in XLSX. Previously leading zeros would get truncated if a text cell contained only numbers.
+
 ### v.0.5.10  2015-04-18
 
 - Implemented SeekableIterator. Thanks to [paales](https://github.com/paales) for suggestion ([Issue #54](https://github.com/nuovo/spreadsheet-reader/issues/54) and [Pull request #55](https://github.com/nuovo/spreadsheet-reader/pull/55)).
