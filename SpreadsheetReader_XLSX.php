@@ -615,7 +615,7 @@
 			{
 				return $Value;
 			}
-			
+
 			if (isset($this -> Styles[$Index]) && ($this -> Styles[$Index] !== false))
 			{
 				$Index = $this -> Styles[$Index];
@@ -790,8 +790,12 @@
 			// Applying format to value
 			if ($Format)
 			{
+    			if ($Format['Code'] == '@')
+    			{
+        			return (string)$Value;
+    			}
 				// Percentages
-				if ($Format['Type'] == 'Percentage')
+				elseif ($Format['Type'] == 'Percentage')
 				{
 					if ($Format['Code'] === '0%')
 					{
