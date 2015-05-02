@@ -103,6 +103,21 @@
 		private $SSOpen = false;
 		private $SSForwarded = false;
 
+		/**
+		 * @var string List of all merged cells in this worksheet
+		 */ 
+		private $MergedCells = "";
+
+		/**
+		 * @var array Index of all the top values of the merged cells
+		 */ 
+		private $RangeValues = array();
+
+		/**
+		 * @var bool Option on whether or not processing the merged cells
+		 */ 
+		private $ProcessMerge = null ;
+
 		private static $BuiltinFormats = array(
 			0 => '',
 			1 => '0',
@@ -198,7 +213,8 @@
 		 * @param string Path to file
 		 * @param array Options:
 		 *	TempDir => string Temporary directory path
-		 *	ReturnDateTimeObjects => bool True => dates and times will be returned as PHP DateTime objects, false => as strings
+		 *	ReturnDateTimeObjects => bool True => dates and times will be returned as PHP DateTime objects, false => as strings,
+		 *  ProcessMerge => bool True => try to retrieve the values for merged cells (really slower and less memory efficient), false => don't try. It's quick and light on memory.
 		 */
 		public function __construct($Filepath, array $Options = null)
 		{
@@ -213,6 +229,8 @@
 
 			$this -> TempDir = rtrim($this -> TempDir, DIRECTORY_SEPARATOR);
 			$this -> TempDir = $this -> TempDir.DIRECTORY_SEPARATOR.uniqid().DIRECTORY_SEPARATOR;
+
+			$this -> ProcessMerge = $Options['ProcessMerge'];
 
 			$Zip = new ZipArchive;
 			$Status = $Zip -> open($Filepath);
@@ -411,10 +429,84 @@
 				$this -> WorksheetPath = $TempWorksheetPath;
 
 				$this -> rewind();
+				if($this -> ProcessMerge){
+					$this -> parseMergedCells();
+					$this -> rewind();
+				}	
 				return true;
 			}
 
 			return false;
+		}
+
+		/**
+		 * Do a first sweep of the worksheet to detect merged cells and keep the ranges in memory
+		 */
+		private function parseMergedCells(){
+			$this -> Index++;
+
+			$this -> CurrentRow = array();
+
+			if (!$this -> RowOpen)
+			{
+				while ($this -> Valid = $this -> Worksheet -> read())
+				{
+					if( $this -> Worksheet -> name == "mergeCell" ){
+						$MergeSpans = $this -> Worksheet -> getAttribute('ref');
+
+						if($MergeSpans){
+							$MergeSpans = explode(':', $MergeSpans);
+							$RowIndex = $MergeEnd = $ColumnIndex = $x = 0 ;
+							preg_match('/\d+/', $MergeSpans[0], $RowIndex);
+							preg_match('/\d+/', $MergeSpans[1], $MergeEnd);
+							preg_match('/\D+/', $MergeSpans[0], $ColumnIndex);
+							while($RowIndex[0] < $MergeEnd[0]){
+								$RowIndex[0] ++ ;
+								$x ++ ;
+								$MergeSpans[$x] = $ColumnIndex[0].$RowIndex[0];
+							}
+							$this -> MergedCells .= implode(':', $MergeSpans) . "|" ;
+						}
+					}
+				}
+			}
+		}
+
+		/**
+		 * Check against the index whether or not a cell is merged
+		 *
+		 * @param string The name of the cell (A5, C49, AK954, ...)
+		 *
+		 * @return int 1 if cell is merged, otherwise 0.
+		 */
+		private function isMerged($cellReference){
+			return preg_match("/(\||\:)($cellReference)(\||\:)/", $this -> MergedCells);
+		}
+
+		/**
+		 * Gives the range in which the given cell is situated
+		 *
+		 * @param string The name of the cell (A5, C49, AK954, ...)
+		 *
+		 * @return string the complete range definition
+		 */
+		private function mergedRange($cellReference){
+			$range = "";
+			preg_match("/(\||^)((\w+:)+)?($cellReference)(:(\w+:?)+|\|)/i", $this -> MergedCells, $range);
+			return trim($range[0], "|");
+		}
+
+		/**
+		 * Gives the value of the top cell in the range
+		 *
+		 * @param string the range you want to know the value of
+		 *
+		 * @return mixed the range value
+		 */
+		private function mergedValue($range){
+			$range = explode(':', $range);
+			$first = $range[0];
+			return $this -> RangeValues[$first]?: false;
 		}
 
 		/**
@@ -1028,6 +1120,7 @@
 				$CellCount = 0;
 
 				$CellHasSharedString = false;
+				$CellIsMerged = $CellName = $MergedRange = $MergedValue = false;
 
 				while ($this -> Valid = $this -> Worksheet -> read())
 				{
@@ -1043,7 +1136,7 @@
 							break;
 						// Cell
 						case 'c':
-							// If it is a closing tag, skip it
+							// If it is a closing tag, skip it, unless it's merged
 							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
 							{
 								continue;
@@ -1067,6 +1160,12 @@
 							}
 
 							$this -> CurrentRow[$Index] = '';
+							$CellName = $this -> Worksheet -> getAttribute('r');
+							$CellIsMerged = $this -> isMerged($CellName);
+							if( $CellIsMerged ){
+								$MergedValue = $this -> mergedValue($this -> mergedRange($CellName));
+								$this -> CurrentRow[$Index] = $MergedValue;
+							}
 
 							$CellCount++;
 							if ($Index > $MaxIndex)
@@ -1101,6 +1200,11 @@
 							}
 
 							$this -> CurrentRow[$Index] = $Value;
+
+							if($CellIsMerged){
+								$this -> RangeValues[$CellName] = $Value;
+							}
+
 							break;
 					}
 				}

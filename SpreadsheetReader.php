@@ -36,8 +36,9 @@
 		 * @param string Path to file
 		 * @param string Original filename (in case of an uploaded file), used to determine file type, optional
 		 * @param string MIME type from an upload, used to determine file type, optional
+		 * @param bool Set to true allow for merged cells processing. Slower and less memory efficient but actually gives the right values in the lower merged cells.
 		 */
-		public function __construct($Filepath, $OriginalFilename = false, $MimeType = false)
+		public function __construct($Filepath, $OriginalFilename = false, $MimeType = false, $ProcessMerge = false)
 		{
 			if (!is_readable($Filepath))
 			{
@@ -163,7 +164,7 @@
 			{
 				case self::TYPE_XLSX:
 					self::Load(self::TYPE_XLSX);
-					$this -> Handle = new SpreadsheetReader_XLSX($Filepath);
+					$this -> Handle = new SpreadsheetReader_XLSX($Filepath, array("ProcessMerge" => $ProcessMerge));
 					break;
 				case self::TYPE_CSV:
 					self::Load(self::TYPE_CSV);
