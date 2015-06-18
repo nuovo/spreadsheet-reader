@@ -245,7 +245,7 @@
 			{
 				return false;
 			}
-			return ($this -> Index <= $this -> RowCount);
+			return ($this -> Index < $this -> RowCount);
 		}
 
 		// !Countable interface method
