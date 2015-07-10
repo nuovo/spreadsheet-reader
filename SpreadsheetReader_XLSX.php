@@ -20,7 +20,7 @@
 		 *	With large shared string caches there are huge performance gains, however a lot of memory could be used which
 		 *	can be a problem, especially on shared hosting.
 		 */
-		const SHARED_STRING_CACHE_LIMIT = 50000;
+		const SHARED_STRING_CACHE_LIMIT = NULL;
 
 		private $Options = array(
 			'TempDir' => '',
