@@ -125,15 +125,16 @@
 			{
 				$this -> rewind();
 				$this -> CurrentSheet = $this -> SheetIndexes[$Index];
+                		$currentSheet = $this -> Handle -> sheets[$this -> CurrentSheet];
 
-				$this -> ColumnCount = $this -> Handle -> sheets[$this -> CurrentSheet]['numCols'];
-				$this -> RowCount = $this -> Handle -> sheets[$this -> CurrentSheet]['numRows'];
+				$this -> ColumnCount = $currentSheet['numCols'];
+				$this -> RowCount = $currentSheet['numRows'];
 
 				// For the case when Spreadsheet_Excel_Reader doesn't have the row count set correctly.
-				if (!$this -> RowCount && count($this -> Handle -> sheets[$this -> CurrentSheet]['cells']))
+				if (!$this -> RowCount && isset($currentSheet['cells']) && count($currentSheet['cells']))
 				{
-					end($this -> Handle -> sheets[$this -> CurrentSheet]['cells']);
-					$this -> RowCount = (int)key($this -> Handle -> sheets[$this -> CurrentSheet]['cells']);
+					end($currentSheet['cells']);
+					$this -> RowCount = (int)key($currentSheet['cells']);
 				}
 
 				if ($this -> ColumnCount)
