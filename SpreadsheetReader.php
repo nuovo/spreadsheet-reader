@@ -82,7 +82,7 @@
 				case 'application/msexcel':
 				case 'application/x-msexcel':
 				case 'application/x-ms-excel':
-				case 'application/vnd.ms-excel':
+				case 'application/vnd.ms-office':
 				case 'application/x-excel':
 				case 'application/x-dos_ms_excel':
 				case 'application/xls':
