@@ -1726,8 +1726,7 @@ class Spreadsheet_Excel_Reader {
 
 	function _encodeCustom($string) {
 		$result = $string;
-		if ($this->_defaultEncoding)
-		{
+		if ($this->_defaultEncoding){
 			switch ($this->_encoderFunction){
 				case 'iconv' :	 $result = iconv(mb_detect_encoding($string, mb_detect_order(), false), $this->_defaultEncoding, $string);
 								break;
