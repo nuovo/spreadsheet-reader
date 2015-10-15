@@ -1724,7 +1724,7 @@ class Spreadsheet_Excel_Reader {
 		return $result;
 	}
 
-	function _encodeUTF16($string) {
+	function _encodeCustom($string) {
 		$result = $string;
 		if ($this->_defaultEncoding){
 			switch ($this->_encoderFunction){
