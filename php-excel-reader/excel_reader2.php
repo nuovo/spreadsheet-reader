@@ -1552,7 +1552,7 @@ class Spreadsheet_Excel_Reader {
 						}
 					}
 					$linkdata['desc'] = $udesc;
-					$linkdata['link'] = $this->_encodeUTF16($ulink);
+					$linkdata['link'] = $this->_encodeCustom($ulink);
 					for ($r=$row; $r<=$row2; $r++) { 
 						for ($c=$column; $c<=$column2; $c++) {
 							$this->sheets[$this->sn]['cellsInfo'][$r+1][$c+1]['hyperlink'] = $linkdata;
@@ -1724,6 +1724,19 @@ class Spreadsheet_Excel_Reader {
 		return $result;
 	}
 
+	function _encodeUTF16($string) {
+		$result = $string;
+		if ($this->_defaultEncoding){
+			switch ($this->_encoderFunction){
+				case 'iconv' :	 $result = iconv(mb_detect_encoding($string, mb_detect_order(), false), $this->_defaultEncoding, $string);
+								break;
+				case 'mb_convert_encoding' :	 $result = mb_convert_encoding($string, $this->_defaultEncoding, 'UTF-16LE' );
+								break;
+			}
+		}
+		return $result;
+	}
+	
 	function _GetInt4d($data, $pos) {
 		$value = ord($data[$pos]) | (ord($data[$pos+1]) << 8) | (ord($data[$pos+2]) << 16) | (ord($data[$pos+3]) << 24);
 		if ($value>=4294967294) {
