@@ -882,7 +882,7 @@
 								$AdjDecimalDivisor;
 						}
 					}
-					else
+					else if (!$Format['Currency'])
 					{
 						// Scaling
 						$Value = $Value / $Format['Scale'];
@@ -906,7 +906,9 @@
 					// Currency/Accounting
 					if ($Format['Currency'])
 					{
-						$Value = preg_replace('', $Format['Currency'], $Value);
+						//this breaks everything
+						//$Value = preg_replace('', $Format['Currency'], $Value);
+						$Value = $this->GeneralFormat($Value);
 					}
 				}
 				
