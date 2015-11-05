@@ -5,7 +5,7 @@
  * @version 0.5.10
  * @author Martins Pilsetnieks
  */
-	class SpreadsheetReader implements SeekableIterator, Countable
+	class SpreadsheetReader implements SeekableIterator, Countable, ArrayAccess
 	{
 		const TYPE_XLSX = 'XLSX';
 		const TYPE_XLS = 'XLS';
@@ -343,6 +343,49 @@
 			}
 
 			return null;
+		}
+		/**
+		 * @param int $offset
+		 * @return bool
+		 */
+		public function offsetExists($offset)
+		{
+			$currentIndex = $this->Handle->key();
+			$seek = $this->seek($offset);
+			$this->seek($currentIndex);
+			return $seek && $seek !== null ;
+		}
+
+		/**
+		 * @param int $offset
+		 * @return mixed
+		 */
+		public function offsetGet($offset)
+		{
+			$currentIndex = $this->Handle->key();
+			$this->seek($offset);
+			$offsetData = $this->Handle->current();
+			$this->seek($currentIndex);
+			return $offsetData;
+		}
+
+		/**
+		 * @param int $offset
+		 * @param int $value
+		 * @throws Exception
+		 */
+		public function offsetSet($offset, $value)
+		{
+			throw new Exception("Cannot set value for resource");
+		}
+
+		/**
+		 * @param int $offset
+		 * @throws Exception
+		 */
+		public function offsetUnset($offset)
+		{
+			throw new Exception("Cannot unset value for resource");
 		}
 	}
 ?>
