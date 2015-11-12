@@ -375,7 +375,7 @@
 					{
 						if ($Name == 'id')
 						{
-							$SheetID = (int)str_replace('rId', '', (string)$Value);
+							$SheetID = (int)($Sheet['sheetId']);
 							break;
 						}
 					}
