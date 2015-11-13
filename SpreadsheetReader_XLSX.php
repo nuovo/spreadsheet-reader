@@ -1087,9 +1087,8 @@
 							{
 								$Value = $this -> GetSharedString($Value);
 							}
-
 							// Format value if necessary
-							if ($Value !== '' && $StyleId && isset($this -> Styles[$StyleId]))
+							else if ($Value !== '' && $StyleId && isset($this -> Styles[$StyleId]))
 							{
 								$Value = $this -> FormatValue($Value, $StyleId);
 							}
