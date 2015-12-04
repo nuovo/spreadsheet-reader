@@ -1000,7 +1000,7 @@
 						if ($RowSpans)
 						{
 							$RowSpans = explode(':', $RowSpans);
-							$CurrentRowColumnCount = $RowSpans[1];
+							$CurrentRowColumnCount = $RowSpans[count($RowSpans) - 1];
 						}
 						else
 						{
