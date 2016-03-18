@@ -1249,11 +1249,11 @@ class Spreadsheet_Excel_Reader {
 									if (preg_match("/[^hmsday\/\-:\s\\\,AMP]/i", $tmp) == 0) { // found day and time format
 										$isdate = TRUE;
 										$formatstr = $tmp;
-										if ($formatstr === 'YYYY/MM/DD') {
+										if ($formatstr === 'YYYY/MM/DD' || $formatstr === 'YYYY\-MM\-DD') {
 											// LibreOffice turns this pattern into invalid dates:
 											// 2015201520152015/OctOct/WedWed
 											// here we fix it
-											$formatstr = 'Y/m/d';
+											$formatstr = 'Y-m-d';
 										} else {
 											$formatstr = str_replace(array('AM/PM','mmmm','mmm'), array('a','F','M'), $formatstr);
 											// m/mm are used for both minutes and months - oh SNAP!
