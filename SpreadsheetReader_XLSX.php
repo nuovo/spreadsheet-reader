@@ -20,7 +20,7 @@
 		 *	With large shared string caches there are huge performance gains, however a lot of memory could be used which
 		 *	can be a problem, especially on shared hosting.
 		 */
-		const SHARED_STRING_CACHE_LIMIT = 50000;
+		const SHARED_STRING_CACHE_LIMIT = null;
 
 		private $Options = array(
 			'TempDir' => '',
@@ -367,16 +367,14 @@
 				$this -> Sheets = array();
 				foreach ($this -> WorkbookXML -> sheets -> sheet as $Index => $Sheet)
 				{
-					$Attributes = $Sheet -> attributes('r', true);
+					$Attributes = $Sheet -> attributes();
 					foreach ($Attributes as $Name => $Value)
 					{
-						if ($Name == 'id')
-						{
-							$SheetID = (int)str_replace('rId', '', (string)$Value);
+						if ($Name == 'sheetId') {
+							$SheetID = (int)$Value;
 							break;
 						}
 					}
-
 					$this -> Sheets[$SheetID] = (string)$Sheet['name'];
 				}
 				ksort($this -> Sheets);
