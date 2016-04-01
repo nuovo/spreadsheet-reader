@@ -204,7 +204,7 @@
 				throw new Exception('SpreadsheetReader: Invalid type ('.$Type.')');
 			}
 
-			if (!class_exists('SpreadsheetReader_'.$Type))
+			if (!class_exists('SpreadsheetReader_'.$Type, false))
 			{
 				require(dirname(__FILE__).DIRECTORY_SEPARATOR.'SpreadsheetReader_'.$Type.'.php');
 			}
