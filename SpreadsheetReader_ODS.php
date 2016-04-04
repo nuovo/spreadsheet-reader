@@ -25,6 +25,8 @@
 		 */
 		private $Sheets = false;
 
+		private $CurrentRow = null;
+
 		/**
 		 * @var int Number of the sheet we're currently reading
 		 */
@@ -167,6 +169,8 @@
 
 				$this -> TableOpen = false;
 				$this -> RowOpen = false;
+
+				$this -> CurrentRow = null;
 			}
 
 			$this -> Index = 0;
@@ -180,7 +184,7 @@
 		 */
 		public function current()
 		{
-			if ($this -> Index == 0)
+			if ($this -> Index == 0 && is_null($this -> CurrentRow))
 			{
 				$this -> next();
 				$this -> Index--;

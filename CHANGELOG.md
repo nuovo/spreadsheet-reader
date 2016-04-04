@@ -1,3 +1,30 @@
+### v.0.5.11  2015-04-30
+
+- Added a special case for cells formatted as text in XLSX. Previously leading zeros would get truncated if a text cell contained only numbers.
+
+### v.0.5.10  2015-04-18
+
+- Implemented SeekableIterator. Thanks to [paales](https://github.com/paales) for suggestion ([Issue #54](https://github.com/nuovo/spreadsheet-reader/issues/54) and [Pull request #55](https://github.com/nuovo/spreadsheet-reader/pull/55)).
+- Fixed a bug in CSV and ODS reading where reading position 0 multiple times in a row would result in internal pointer being advanced and reading the next line. (E.g. reading row #0 three times would result in rows #0, #1, and #2.). This could have happened on multiple calls to `current()` while in #0 position, or calls to `seek(0)` and `current()`.
+
+### v.0.5.9  2015-04-18
+
+- [Pull request #85](https://github.com/nuovo/spreadsheet-reader/pull/85): Fixed an index check. (Thanks to [pa-m](https://github.com/pa-m)).
+
+### v.0.5.8  2015-01-31
+
+- [Issue #50](https://github.com/nuovo/spreadsheet-reader/issues/50): Fixed an XLSX rewind issue. (Thanks to [osuwariboy](https://github.com/osuwariboy))
+- [Issue #52](https://github.com/nuovo/spreadsheet-reader/issues/52), [#53](https://github.com/nuovo/spreadsheet-reader/issues/53): Apache POI compatibility for XLSX. (Thanks to [dimapashkov](https://github.com/dimapashkov))
+- [Issue #61](https://github.com/nuovo/spreadsheet-reader/issues/61): Autoload fix in the main class. (Thanks to [i-bash](https://github.com/i-bash))
+- [Issue #60](https://github.com/nuovo/spreadsheet-reader/issues/60), [#69](https://github.com/nuovo/spreadsheet-reader/issues/69), [#72](https://github.com/nuovo/spreadsheet-reader/issues/72): Fixed an issue where XLSX ChangeSheet may not work. (Thanks to [jtresponse](https://github.com/jtresponse), [osuwariboy](https://github.com/osuwariboy))
+- [Issue #70](https://github.com/nuovo/spreadsheet-reader/issues/70): Added a check for constructor parameter correctness.
+
+
+### v.0.5.7  2013-10-29
+
+- Attempt to replicate Excel's "General" format in XLSX files that is applied to otherwise unformatted cells.
+Currently only decimal number values are converted to PHP's floats.
+
 ### v.0.5.6  2013-09-04
 
 - Fix for formulas being returned along with values in XLSX files. (Thanks to [marktag](https://github.com/marktag))

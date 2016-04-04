@@ -20,7 +20,7 @@
 		 *	With large shared string caches there are huge performance gains, however a lot of memory could be used which
 		 *	can be a problem, especially on shared hosting.
 		 */
-		const SHARED_STRING_CACHE_LIMIT = null;
+		const SHARED_STRING_CACHE_LIMIT = 50000;
 
 		private $Options = array(
 			'TempDir' => '',
@@ -1105,7 +1105,7 @@
 							// Format value if necessary
 							if ($Value !== '' && $StyleId && isset($this -> Styles[$StyleId]))
 							{
-								$Value = $this -> FormatValue($Value, $StyleId);
+//								$Value = $this -> FormatValue($Value, $StyleId);
 							}
 							elseif ($Value)
 							{

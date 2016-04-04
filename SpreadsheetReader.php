@@ -2,7 +2,7 @@
 /**
  * Main class for spreadsheet reading
  *
- * @version 0.5.6
+ * @version 0.5.10
  * @author Martins Pilsetnieks
  */
 	class SpreadsheetReader implements SeekableIterator, Countable
@@ -49,6 +49,18 @@
 			if ($DefaultTZ)
 			{
 				date_default_timezone_set($DefaultTZ);
+			}
+
+			// Checking the other parameters for correctness
+
+			// This should be a check for string but we're lenient
+			if (!empty($OriginalFilename) && !is_scalar($OriginalFilename))
+			{
+				throw new Exception('SpreadsheetReader: Original file (2nd parameter) path is not a string or a scalar value.');
+			}
+			if (!empty($MimeType) && !is_scalar($MimeType))
+			{
+				throw new Exception('SpreadsheetReader: Mime type (3nd parameter) path is not a string or a scalar value.');
 			}
 
 			// 1. Determine type
@@ -204,6 +216,8 @@
 				throw new Exception('SpreadsheetReader: Invalid type ('.$Type.')');
 			}
 
+			// 2nd parameter is to prevent autoloading for the class.
+			// If autoload works, the require line is unnecessary, if it doesn't, it ends badly.
 			if (!class_exists('SpreadsheetReader_'.$Type, false))
 			{
 				require(dirname(__FILE__).DIRECTORY_SEPARATOR.'SpreadsheetReader_'.$Type.'.php');
@@ -295,37 +309,40 @@
 			return 0;
 		}
 
+		/**
+		 * Method for SeekableIterator interface. Takes a posiiton and traverses the file to that position
+		 * The value can be retrieved with a `current()` call afterwards.
+		 *
+		 * @param int Position in file
+		 */
+		public function seek($Position)
+		{
+			if (!$this -> Handle)
+			{
+				throw new OutOfBoundsException('SpreadsheetReader: No file opened');
+			}
 
-        /**
-         * @param int $position
-         *
-         * @return null
-         * @throws OutOfBoundsException
-         */
-        public function seek($position) {
-            if (! $this->Handle) {
-                return null;
-            };
+			$CurrentIndex = $this -> Handle -> key();
 
-            if ($position != $this->Handle->key()) {
-                if (0 == $position) {
-                    $this->rewind();
-                    return;
-                } elseif ($position > 0) {
-                    if ($this->Handle->key() === null || $position < $this->Handle->key()) {
-                        $this->rewind();
-                    }
+			if ($CurrentIndex != $Position)
+			{
+				if ($Position < $CurrentIndex || is_null($CurrentIndex) || $Position == 0)
+				{
+					$this -> rewind();
+				}
 
-                    while ($nodeStr = $this->Handle->next()) {
-                        if ($this->Handle->key() == $position) {
-                            return;
-                        }
-                    }
-                }
-                throw new OutOfBoundsException(Mage::helper('importexport')->__('Invalid seek position'));
-            }
+				while ($this -> Handle -> valid() && ($Position > $this -> Handle -> key()))
+				{
+					$this -> Handle -> next();
+				}
 
-            return null;
-        }
+				if (!$this -> Handle -> valid())
+				{
+					throw new OutOfBoundsException('SpreadsheetError: Position '.$Position.' not found');
+				}
+			}
+
+			return null;
+		}
 	}
 ?>
