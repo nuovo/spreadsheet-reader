@@ -370,17 +370,29 @@
 				$this -> Sheets = array();
 				foreach ($this -> WorkbookXML -> sheets -> sheet as $Index => $Sheet)
 				{
-					$Attributes = $Sheet -> attributes('r', true);
-					foreach ($Attributes as $Name => $Value)
+					$AttributesWithPrefix = $Sheet -> attributes('r', true);
+					$Attributes = $Sheet -> attributes();
+
+					$rId = 0;
+					$sheetId = 0;
+
+					foreach ($AttributesWithPrefix as $Name => $Value)
 					{
 						if ($Name == 'id')
 						{
-							$SheetID = (int)str_replace('rId', '', (string)$Value);
+							$rId = (int)str_replace('rId', '', (string)$Value);
+							break;
+						}
+					}
+					foreach ($Attributes as $Name => $Value)
+					{
+						if ($Name == 'sheetId') {
+							$sheetId = (int)$Value;
 							break;
 						}
 					}
 
-					$this -> Sheets[$SheetID] = (string)$Sheet['name'];
+					$this -> Sheets[min($rId, $sheetId)] = (string)$Sheet['name'];
 				}
 				ksort($this -> Sheets);
 			}
@@ -1093,7 +1105,7 @@
 							// Format value if necessary
 							if ($Value !== '' && $StyleId && isset($this -> Styles[$StyleId]))
 							{
-								$Value = $this -> FormatValue($Value, $StyleId);
+//								$Value = $this -> FormatValue($Value, $StyleId);
 							}
 							elseif ($Value)
 							{
