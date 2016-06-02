@@ -3,7 +3,7 @@
 	"description": "Spreadsheet reader library for Excel, OpenOffice and structured text files",
 	"keywords": ["spreadsheet", "xls", "xlsx", "ods", "csv", "excel", "openoffice"],
 	"homepage": "https://github.com/karlis-i/spreadsheet-reader",
-	"version": "0.5.15",
+	"version": "0.5.16",
 	"time": "2016-06-02",
 	"type": "library",
 	"license": ["MIT"],
