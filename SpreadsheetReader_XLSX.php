@@ -24,7 +24,8 @@
 
 		private $Options = array(
 			'TempDir' => '',
-			'ReturnDateTimeObjects' => false
+			'ReturnDateTimeObjects' => false,
+			'ForceDateFormat' => 'Y-m-d H:i:s'
 		);
 
 		private static $RuntimeInfo = array(
@@ -831,7 +832,11 @@
 
 					if (!$this -> Options['ReturnDateTimeObjects'])
 					{
-						$Value = $Value -> format($Format['Code']);
+						if ($this->Options['ForceDateFormat']) {
+							$Value = $Value->format($this->Options['ForceDateFormat']);
+						} else {
+							$Value = $Value->format($Format['Code']);
+						}
 					}
 					else
 					{
