@@ -376,13 +376,13 @@
 						if ($Name == 'id')
 						{
 							//$SheetID = (int)str_replace('rId', '', (string)$Value);
-				                        /**
-				                         * Get sheet id with any format string wrapper around it
-				                         * eg box/spout writes xslx where sheet id is 
-				                         * formatted as rIdSheet{n} not rId{0}
-				                         */
-				                        $SheetID= intval(preg_replace('/[^0-9]+/', '', $Value), 10);
-				                        break;
+							/**
+							 * Get sheet id with any format string wrapper around it
+							 * eg box/spout writes xslx where sheet id is
+							 * formatted as rIdSheet{n} not rId{0}
+							 */
+							$SheetID= intval(preg_replace('/[^0-9]+/', '', $Value), 10);
+							break;
 						}
 					}
 
