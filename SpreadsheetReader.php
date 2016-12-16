@@ -106,6 +106,7 @@
 				case 'application/vnd.openxmlformats-officedocument.spreadsheetml.template':
 				case 'application/xlsx':
 				case 'application/xltx':
+				case 'application/zip':
 					$this -> Type = self::TYPE_XLSX;
 					break;
 				case 'application/xml':
