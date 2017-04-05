@@ -22,14 +22,30 @@
 		private $Error = false;
 
 		/**
+		 * @var array Sheet information
+		 */
+		private $Sheets = false;
+		private $SheetIndexes = array();
+
+		/**
+		 * @var int Current sheet index
+		 */
+		private $CurrentSheet = 0;
+
+		/**
 		 * @var array Content of the current row
 		 */
 		private $CurrentRow = array();
 
 		/**
-		 * @var int Column count in the file
+		 * @var int Column count in the sheet
 		 */
 		private $ColumnCount = 0;
+		/**
+		 * @var int Row count in the sheet
+		 */
+		private $RowCount = 0;
+
 		/**
 		 * @var array Template to use for empty rows. Retrieved rows are merged
 		 *	with this so that empty cells are added, too
@@ -52,23 +68,20 @@
 				throw new Exception('SpreadsheetReader_XLS: Spreadsheet_Excel_Reader class not available');
 			}
 
-			$this -> Handle = new Spreadsheet_Excel_Reader;
-			$this -> Handle -> setOutputEncoding('UTF-8');
+			$this -> Handle = new Spreadsheet_Excel_Reader($Filepath, false, 'UTF-8');
 
 			if (function_exists('mb_convert_encoding'))
 			{
 				$this -> Handle -> setUTFEncoder('mb');
 			}
 
-			$this -> Handle -> read($Filepath);
 			if (empty($this -> Handle -> sheets))
 			{
 				$this -> Error = true;
 				return null;
 			}
 
-			$this -> ColumnCount = $this -> Handle -> sheets[0]['numCols'];
-			$this -> EmptyRow = array_fill(1, $this -> ColumnCount, '');
+			$this -> ChangeSheet(0);
 		}
 
 		public function __destruct()
@@ -76,11 +89,73 @@
 			unset($this -> Handle);
 		}
 
+		/**
+		 * Retrieves an array with information about sheets in the current file
+		 *
+		 * @return array List of sheets (key is sheet index, value is name)
+		 */
+		public function Sheets()
+		{
+			if ($this -> Sheets === false)
+			{
+				$this -> Sheets = array();
+				$this -> SheetIndexes = array_keys($this -> Handle -> sheets);
+
+				foreach ($this -> SheetIndexes as $SheetIndex)
+				{
+					$this -> Sheets[] = $this -> Handle -> boundsheets[$SheetIndex]['name'];
+				}
+			}
+			return $this -> Sheets;
+		}
+
+		/**
+		 * Changes the current sheet in the file to another
+		 *
+		 * @param int Sheet index
+		 *
+		 * @return bool True if sheet was successfully changed, false otherwise.
+		 */
+		public function ChangeSheet($Index)
+		{
+			$Index = (int)$Index;
+			$Sheets = $this -> Sheets();
+
+			if (isset($this -> Sheets[$Index]))
+			{
+				$this -> rewind();
+				$this -> CurrentSheet = $this -> SheetIndexes[$Index];
+
+				$this -> ColumnCount = $this -> Handle -> sheets[$this -> CurrentSheet]['numCols'];
+				$this -> RowCount = $this -> Handle -> sheets[$this -> CurrentSheet]['numRows'];
+
+				// For the case when Spreadsheet_Excel_Reader doesn't have the row count set correctly.
+				if (!$this -> RowCount && count($this -> Handle -> sheets[$this -> CurrentSheet]['cells']))
+				{
+					end($this -> Handle -> sheets[$this -> CurrentSheet]['cells']);
+					$this -> RowCount = (int)key($this -> Handle -> sheets[$this -> CurrentSheet]['cells']);
+				}
+
+				if ($this -> ColumnCount)
+				{
+					$this -> EmptyRow = array_fill(1, $this -> ColumnCount, '');
+				}
+				else
+				{
+					$this -> EmptyRow = array();
+				}
+			}
+
+			return false;
+		}
+
 		public function __get($Name)
 		{
-			if ($Name == 'Error')
+			switch ($Name)
 			{
-				return $this -> Error;
+				case 'Error':
+					return $this -> Error;
+					break;
 			}
 			return null;
 		}
@@ -126,9 +201,9 @@
 			{
 				return array();
 			}
-			elseif (isset($this -> Handle -> sheets[0]['cells'][$this -> Index]))
+			elseif (isset($this -> Handle -> sheets[$this -> CurrentSheet]['cells'][$this -> Index]))
 			{
-				$this -> CurrentRow = $this -> Handle -> sheets[0]['cells'][$this -> Index];
+				$this -> CurrentRow = $this -> Handle -> sheets[$this -> CurrentSheet]['cells'][$this -> Index];
 				if (!$this -> CurrentRow)
 				{
 					return array();
@@ -170,7 +245,7 @@
 			{
 				return false;
 			}
-			return ($this -> Index <= $this -> Handle -> sheets[0]['numRows']);
+			return ($this -> Index <= $this -> RowCount);
 		}
 
 		// !Countable interface method
@@ -185,7 +260,7 @@
 				return 0;
 			}
 
-			return $this -> Handle -> sheets[0]['numRows'];
+			return $this -> RowCount;
 		}
 	}
 ?>

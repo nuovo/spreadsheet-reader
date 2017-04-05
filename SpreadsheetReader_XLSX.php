@@ -62,6 +62,12 @@
 		 */
 		private $SharedStringCache = array();
 
+		// Workbook data
+		/**
+		 * @var SimpleXMLElement XML object for the workbook XML file
+		 */
+		private $WorkbookXML = false;
+
 		// Style data
 		/**
 		 * @var SimpleXMLElement XML object for the styles XML file
@@ -73,8 +79,9 @@
 		private $Styles = array();
 
 		private $TempDir = '';
+		private $TempFiles = array();
 
-		private $CurrentRow = array();
+		private $CurrentRow = false;
 
 		// Runtime parsing data
 		/**
@@ -82,18 +89,22 @@
 		 */
 		private $Index = 0;
 
+		/**
+		 * @var array Data about separate sheets in the file
+		 */
+		private $Sheets = false;
+
 		private $SharedStringCount = 0;
 		private $SharedStringIndex = 0;
 		private $LastSharedStringValue = null;
 
 		private $RowOpen = false;
-		private $CellOpen = false;
-		private $ValueOpen = false;
 
 		private $SSOpen = false;
 		private $SSForwarded = false;
 
 		private static $BuiltinFormats = array(
+			0 => '',
 			1 => '0',
 			2 => '0.00',
 			3 => '#,##0',
@@ -211,61 +222,50 @@
 				throw new Exception('SpreadsheetReader_XLSX: File not readable ('.$Filepath.') (Error '.$Status.')');
 			}
 
+			// Getting the general workbook information
+			if ($Zip -> locateName('xl/workbook.xml') !== false)
+			{
+				$this -> WorkbookXML = new SimpleXMLElement($Zip -> getFromName('xl/workbook.xml'));
+			}
+
 			// Extracting the XMLs from the XLSX zip file
 			if ($Zip -> locateName('xl/sharedStrings.xml') !== false)
 			{
-				$this -> SharedStringsPath = $this -> TempDir.'xl/sharedStrings.xml';
-			}
+				$this -> SharedStringsPath = $this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'sharedStrings.xml';
+				$Zip -> extractTo($this -> TempDir, 'xl/sharedStrings.xml');
+				$this -> TempFiles[] = $this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'sharedStrings.xml';
 
-			// 10 tries to check for worksheets should be enough
-			$WorksheetIndex = 0;
-			for ($i = 0; $i < 10; $i++)
-			{
-				if ($Zip -> locateName('xl/worksheets/sheet'.$i.'.xml') !== false)
+				if (is_readable($this -> SharedStringsPath))
 				{
-					$WorksheetIndex = $i;
-					$this -> WorksheetPath = $this -> TempDir.'xl/worksheets/sheet'.$WorksheetIndex.'.xml';
-					break;
+					$this -> SharedStrings = new XMLReader;
+					$this -> SharedStrings -> open($this -> SharedStringsPath);
+					$this -> PrepareSharedStringCache();
 				}
 			}
 
-			if ($this -> WorksheetPath)
-			{
-				$Zip -> extractTo($this -> TempDir, 'xl/worksheets/sheet'.$WorksheetIndex.'.xml');
-				if ($this -> SharedStringsPath)
-				{
-					$Zip -> extractTo($this -> TempDir, 'xl/sharedStrings.xml');
-				}
+			$Sheets = $this -> Sheets();
 
-				if ($Zip -> locateName('xl/styles.xml') !== false)
+			foreach ($this -> Sheets as $Index => $Name)
+			{
+				if ($Zip -> locateName('xl/worksheets/sheet'.$Index.'.xml') !== false)
 				{
-					$this -> StylesXML = new SimpleXMLElement($Zip -> getFromName('xl/styles.xml'));
+					$Zip -> extractTo($this -> TempDir, 'xl/worksheets/sheet'.$Index.'.xml');
+					$this -> TempFiles[] = $this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'worksheets'.DIRECTORY_SEPARATOR.'sheet'.$Index.'.xml';
 				}
 			}
 
-			$Zip -> close();
-
-			if ($this -> WorksheetPath && is_readable($this -> WorksheetPath))
-			{
-				$this -> Worksheet = new XMLReader;
-				$this -> Worksheet -> open($this -> WorksheetPath);
-				$this -> Valid = true;
-			}
-			if ($this -> SharedStringsPath && is_readable($this -> SharedStringsPath))
-			{
-				$this -> SharedStrings = new XMLReader;
-				$this -> SharedStrings -> open($this -> SharedStringsPath);
-				$this -> PrepareSharedStringCache();
-			}
+			$this -> ChangeSheet(0);
 
 			// If worksheet is present and is OK, parse the styles already
-			if ($this -> Worksheet && $this -> StylesXML)
+			if ($Zip -> locateName('xl/styles.xml') !== false)
 			{
-				if ($this -> StylesXML -> cellXfs && $this -> StylesXML -> cellXfs -> xf)
+				$this -> StylesXML = new SimpleXMLElement($Zip -> getFromName('xl/styles.xml'));
+				if ($this -> StylesXML && $this -> StylesXML -> cellXfs && $this -> StylesXML -> cellXfs -> xf)
 				{
 					foreach ($this -> StylesXML -> cellXfs -> xf as $Index => $XF)
 					{
-						if ($XF -> attributes() -> applyNumberFormat)
+						// Format #0 is a special case - it is the "General" format that is applied regardless of applyNumberFormat
+						if ($XF -> attributes() -> applyNumberFormat || (0 == (int)$XF -> attributes() -> numFmtId))
 						{
 							$FormatId = (int)$XF -> attributes() -> numFmtId;
 							// If format ID >= 164, it is a custom format and should be read from styleSheet\numFmts
@@ -273,7 +273,8 @@
 						}
 						else
 						{
-							$this -> Styles[] = false;
+							// 0 for "General" format
+							$this -> Styles[] = 0;
 						}
 					}
 				}
@@ -288,6 +289,8 @@
 
 				unset($this -> StylesXML);
 			}
+
+			$Zip -> close();
 
 			// Setting base date
 			if (!self::$BaseDate)
@@ -318,27 +321,100 @@
 		 */
 		public function __destruct()
 		{
+			foreach ($this -> TempFiles as $TempFile)
+			{
+				@unlink($TempFile);
+			}
+
+			// Better safe than sorry - shouldn't try deleting '.' or '/', or '..'.
+			if (strlen($this -> TempDir) > 2)
+			{
+				@rmdir($this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'worksheets');
+				@rmdir($this -> TempDir.'xl');
+				@rmdir($this -> TempDir);
+			}
+
 			if ($this -> Worksheet && $this -> Worksheet instanceof XMLReader)
 			{
 				$this -> Worksheet -> close();
 				unset($this -> Worksheet);
 			}
-			if (file_exists($this -> WorksheetPath))
-			{
-				@unlink($this -> WorksheetPath);
-				unset($this -> WorksheetPath);
-			}
+			unset($this -> WorksheetPath);
 
 			if ($this -> SharedStrings && $this -> SharedStrings instanceof XMLReader)
 			{
 				$this -> SharedStrings -> close();
 				unset($this -> SharedStrings);
 			}
-			if (file_exists($this -> SharedStringsPath))
+			unset($this -> SharedStringsPath);
+
+			if (isset($this -> StylesXML))
 			{
-				@unlink($this -> SharedStringsPath);
-				unset($this -> SharedStringsPath);
+				unset($this -> StylesXML);
 			}
+			if ($this -> WorkbookXML)
+			{
+				unset($this -> WorkbookXML);
+			}
+		}
+
+		/**
+		 * Retrieves an array with information about sheets in the current file
+		 *
+		 * @return array List of sheets (key is sheet index, value is name)
+		 */
+		public function Sheets()
+		{
+			if ($this -> Sheets === false)
+			{
+				$this -> Sheets = array();
+				foreach ($this -> WorkbookXML -> sheets -> sheet as $Index => $Sheet)
+				{
+					$Attributes = $Sheet -> attributes('r', true);
+					foreach ($Attributes as $Name => $Value)
+					{
+						if ($Name == 'id')
+						{
+							$SheetID = (int)str_replace('rId', '', (string)$Value);
+							break;
+						}
+					}
+
+					$this -> Sheets[$SheetID] = (string)$Sheet['name'];
+				}
+				ksort($this -> Sheets);
+			}
+			return array_values($this -> Sheets);
+		}
+
+		/**
+		 * Changes the current sheet in the file to another
+		 *
+		 * @param int Sheet index
+		 *
+		 * @return bool True if sheet was successfully changed, false otherwise.
+		 */
+		public function ChangeSheet($Index)
+		{
+			$RealSheetIndex = false;
+			$Sheets = $this -> Sheets();
+			if (isset($Sheets[$Index]))
+			{
+				$SheetIndexes = array_keys($this -> Sheets);
+				$RealSheetIndex = $SheetIndexes[$Index];
+			}
+
+			$TempWorksheetPath = $this -> TempDir.'xl/worksheets/sheet'.$RealSheetIndex.'.xml';
+
+			if ($RealSheetIndex !== false && is_readable($TempWorksheetPath))
+			{
+				$this -> WorksheetPath = $TempWorksheetPath;
+
+				$this -> rewind();
+				return true;
+			}
+
+			return false;
 		}
 
 		/**
@@ -346,17 +422,16 @@
 		 */
 		private function PrepareSharedStringCache()
 		{
-			$SharedStringCount = 0;
 			while ($this -> SharedStrings -> read())
 			{
 				if ($this -> SharedStrings -> name == 'sst')
 				{
-					$SharedStringCount = $this -> SharedStrings -> getAttribute('count');
+					$this -> SharedStringCount = $this -> SharedStrings -> getAttribute('count');
 					break;
 				}
 			}
 
-			if (!$SharedStringCount || (self::SHARED_STRING_CACHE_LIMIT < $SharedStringCount && self::SHARED_STRING_CACHE_LIMIT !== null))
+			if (!$this -> SharedStringCount || (self::SHARED_STRING_CACHE_LIMIT < $this -> SharedStringCount && self::SHARED_STRING_CACHE_LIMIT !== null))
 			{
 				return false;
 			}
@@ -385,6 +460,7 @@
 				}
 			}
 
+			$this -> SharedStrings -> close();
 			return true;
 		}
 
@@ -397,7 +473,7 @@
 		 */
 		private function GetSharedString($Index)
 		{
-			if ((self::SHARED_STRING_CACHE_LIMIT === null || self::SHARED_STRING_CACHE_LIMIT > 0) && ($this -> SharedStringCache !== null))
+			if ((self::SHARED_STRING_CACHE_LIMIT === null || self::SHARED_STRING_CACHE_LIMIT > 0) && !empty($this -> SharedStringCache))
 			{
 				if (isset($this -> SharedStringCache[$Index]))
 				{
@@ -540,13 +616,19 @@
 				return $Value;
 			}
 
-			if (!empty($this -> Styles[$Index]))
+			if (isset($this -> Styles[$Index]) && ($this -> Styles[$Index] !== false))
 			{
 				$Index = $this -> Styles[$Index];
 			}
 			else
 			{
 				return $Value;
+			}
+
+			// A special case for the "General" format
+			if ($Index == 0)
+			{
+				return $this -> GeneralFormat($Value);
 			}
 
 			$Format = array();
@@ -708,8 +790,12 @@
 			// Applying format to value
 			if ($Format)
 			{
+    			if ($Format['Code'] == '@')
+    			{
+        			return (string)$Value;
+    			}
 				// Percentages
-				if ($Format['Type'] == 'Percentage')
+				elseif ($Format['Type'] == 'Percentage')
 				{
 					if ($Format['Code'] === '0%')
 					{
@@ -805,7 +891,7 @@
 						// Scaling
 						$Value = $Value / $Format['Scale'];
 
-						if ($Format['MinWidth'] && $Format['Decimals'])
+						if (!empty($Format['MinWidth']) && $Format['Decimals'])
 						{
 							if ($Format['Thousands'])
 							{
@@ -833,6 +919,23 @@
 			return $Value;
 		}
 
+		/**
+		 * Attempts to approximate Excel's "general" format.
+		 *
+		 * @param mixed Value
+		 *
+		 * @return mixed Result
+		 */
+		public function GeneralFormat($Value)
+		{
+			// Numeric format
+			if (is_numeric($Value))
+			{
+				$Value = (float)$Value;
+			}
+			return $Value;
+		}
+
 		// !Iterator interface methods
 		/** 
 		 * Rewind the Iterator to the first element.
@@ -840,17 +943,24 @@
 		 */ 
 		public function rewind()
 		{
-			if ($this -> Index > 0)
-			{
-				// If the worksheet was already iterated, XML file is reopened.
-				// Otherwise it should be at the beginning anyway
-				$this -> Worksheet -> close();
-				$this -> Worksheet -> open($this -> WorksheetPath);
-				$this -> Valid = true;
+			// Removed the check whether $this -> Index == 0 otherwise ChangeSheet doesn't work properly
 
-				$this -> RowOpen = false;
+			// If the worksheet was already iterated, XML file is reopened.
+			// Otherwise it should be at the beginning anyway
+			if ($this -> Worksheet instanceof XMLReader)
+			{
+				$this -> Worksheet -> close();
+			}
+			else
+			{
+				$this -> Worksheet = new XMLReader;
 			}
 
+			$this -> Worksheet -> open($this -> WorksheetPath);
+
+			$this -> Valid = true;
+			$this -> RowOpen = false;
+			$this -> CurrentRow = false;
 			$this -> Index = 0;
 		}
 
@@ -862,7 +972,7 @@
 		 */
 		public function current()
 		{
-			if ($this -> Index == 0)
+			if ($this -> Index == 0 && $this -> CurrentRow === false)
 			{
 				$this -> next();
 				$this -> Index--;
@@ -877,6 +987,8 @@
 		public function next()
 		{
 			$this -> Index++;
+
+			$this -> CurrentRow = array();
 
 			if (!$this -> RowOpen)
 			{
@@ -897,6 +1009,11 @@
 							$CurrentRowColumnCount = 0;
 						}
 
+						if ($CurrentRowColumnCount > 0)
+						{
+							$this -> CurrentRow = array_fill(0, $CurrentRowColumnCount, '');
+						}
+
 						$this -> RowOpen = true;
 						break;
 					}
@@ -906,18 +1023,11 @@
 			// Reading the necessary row, if found
 			if ($this -> RowOpen)
 			{
-				if ($CurrentRowColumnCount > 0)
-				{
-					$this -> CurrentRow = array_fill(0, $CurrentRowColumnCount, '');
-				}
-				else
-				{
-					$this -> CurrentRow = array();
-				}
-
 				// These two are needed to control for empty cells
 				$MaxIndex = 0;
 				$CellCount = 0;
+
+				$CellHasSharedString = false;
 
 				while ($this -> Valid = $this -> Worksheet -> read())
 				{
@@ -930,6 +1040,7 @@
 								$this -> RowOpen = false;
 								break 2;
 							}
+							break;
 						// Cell
 						case 'c':
 							// If it is a closing tag, skip it
@@ -938,35 +1049,24 @@
 								continue;
 							}
 
-							$this -> CellOpen = !$this -> CellOpen;
-
-							// Determine cell type and get value
-							if ($this -> Worksheet -> getAttribute('t') == self::CELL_TYPE_SHARED_STR)
-							{
-								$SharedStringIndex = $this -> Worksheet -> readString();
-								$Value = $this -> GetSharedString($SharedStringIndex);
-							}
-							else
-							{
-								$Value = $this -> Worksheet -> readString();
-							}
-
-							// Format value if necessary
-							if ($Value !== '')
-							{
-								$StyleId = (int)$this -> Worksheet -> getAttribute('s');
-								if ($StyleId && isset($this -> Styles[$StyleId]))
-								{
-									$Value = $this -> FormatValue($Value, $StyleId);
-								}
-							}
+							$StyleId = (int)$this -> Worksheet -> getAttribute('s');
 
 							// Get the index of the cell
 							$Index = $this -> Worksheet -> getAttribute('r');
 							$Letter = preg_replace('{[^[:alpha:]]}S', '', $Index);
 							$Index = self::IndexFromColumnLetter($Letter);
 
-							$this -> CurrentRow[$Index] = $Value;
+							// Determine cell type
+							if ($this -> Worksheet -> getAttribute('t') == self::CELL_TYPE_SHARED_STR)
+							{
+								$CellHasSharedString = true;
+							}
+							else
+							{
+								$CellHasSharedString = false;
+							}
+
+							$this -> CurrentRow[$Index] = '';
 
 							$CellCount++;
 							if ($Index > $MaxIndex)
@@ -974,6 +1074,33 @@
 								$MaxIndex = $Index;
 							}
 
+							break;
+						// Cell value
+						case 'v':
+						case 'is':
+							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
+							{
+								continue;
+							}
+
+							$Value = $this -> Worksheet -> readString();
+
+							if ($CellHasSharedString)
+							{
+								$Value = $this -> GetSharedString($Value);
+							}
+
+							// Format value if necessary
+							if ($Value !== '' && $StyleId && isset($this -> Styles[$StyleId]))
+							{
+								$Value = $this -> FormatValue($Value, $StyleId);
+							}
+							elseif ($Value)
+							{
+								$Value = $this -> GeneralFormat($Value);
+							}
+
+							$this -> CurrentRow[$Index] = $Value;
 							break;
 					}
 				}

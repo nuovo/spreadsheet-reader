@@ -2,10 +2,10 @@
 /**
  * Main class for spreadsheet reading
  *
- * @version 0.4.0
+ * @version 0.5.10
  * @author Martins Pilsetnieks
  */
-	class SpreadsheetReader implements Iterator, Countable
+	class SpreadsheetReader implements SeekableIterator, Countable
 	{
 		const TYPE_XLSX = 'XLSX';
 		const TYPE_XLS = 'XLS';
@@ -44,11 +44,32 @@
 				throw new Exception('SpreadsheetReader: File ('.$Filepath.') not readable');
 			}
 
+			// To avoid timezone warnings and exceptions for formatting dates retrieved from files
+			$DefaultTZ = @date_default_timezone_get();
+			if ($DefaultTZ)
+			{
+				date_default_timezone_set($DefaultTZ);
+			}
+
+			// Checking the other parameters for correctness
+
+			// This should be a check for string but we're lenient
+			if (!empty($OriginalFilename) && !is_scalar($OriginalFilename))
+			{
+				throw new Exception('SpreadsheetReader: Original file (2nd parameter) path is not a string or a scalar value.');
+			}
+			if (!empty($MimeType) && !is_scalar($MimeType))
+			{
+				throw new Exception('SpreadsheetReader: Mime type (3nd parameter) path is not a string or a scalar value.');
+			}
+
 			// 1. Determine type
 			if (!$OriginalFilename)
 			{
 				$OriginalFilename = $Filepath;
 			}
+
+			$Extension = strtolower(pathinfo($OriginalFilename, PATHINFO_EXTENSION));
 
 			switch ($MimeType)
 			{
@@ -68,8 +89,7 @@
 				case 'application/xlt':
 				case 'application/x-xls':
 					// Excel does weird stuff
-					$Extension = substr($OriginalFilename, -4);
-					if (in_array($Extension, array('.csv', '.tsv', '.txt')))
+					if (in_array($Extension, array('csv', 'tsv', 'txt')))
 					{
 						$this -> Type = self::TYPE_CSV;
 					}
@@ -80,13 +100,13 @@
 					break;
 				case 'application/vnd.oasis.opendocument.spreadsheet':
 				case 'application/vnd.oasis.opendocument.spreadsheet-template':
-					$this -> Mode = self::TYPE_ODS;
+					$this -> Type = self::TYPE_ODS;
 					break;
 				case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
 				case 'application/vnd.openxmlformats-officedocument.spreadsheetml.template':
 				case 'application/xlsx':
 				case 'application/xltx':
-					$this -> Mode = self::TYPE_XLSX;
+					$this -> Type = self::TYPE_XLSX;
 					break;
 				case 'application/xml':
 					// Excel 2004 xml format uses this
@@ -95,28 +115,25 @@
 
 			if (!$this -> Type)
 			{
-				if (substr($OriginalFilename, -5) == '.xlsx' || substr($OriginalFilename, -5) == '.xltx')
+				switch ($Extension)
 				{
-					$this -> Type = self::TYPE_XLSX;
-					$Extension = '.xlsx';
-				}
-				else
-				{
-					$Extension = substr($OriginalFilename, -4);
-				}
-
-				if ($Extension == '.xls' || $Extension == '.xlt')
-				{
-					$this -> Type = self::TYPE_XLS;
-				}
-				elseif ($Extension == '.ods' || $Extension == '.odt')
-				{
-					$this -> Type = self::TYPE_ODS;
-				}
-				elseif (!$this -> Type)
-				{
-					// If type cannot be determined, try parsing as CSV, it might just be a text file
-					$this -> Type = self::TYPE_CSV;
+					case 'xlsx':
+					case 'xltx': // XLSX template
+					case 'xlsm': // Macro-enabled XLSX
+					case 'xltm': // Macro-enabled XLSX template
+						$this -> Type = self::TYPE_XLSX;
+						break;
+					case 'xls':
+					case 'xlt':
+						$this -> Type = self::TYPE_XLS;
+						break;
+					case 'ods':
+					case 'odt':
+						$this -> Type = self::TYPE_ODS;
+						break;
+					default:
+						$this -> Type = self::TYPE_CSV;
+						break;
 				}
 			}
 
@@ -163,6 +180,31 @@
 		}
 
 		/**
+		 * Gets information about separate sheets in the given file
+		 *
+		 * @return array Associative array where key is sheet index and value is sheet name
+		 */
+		public function Sheets()
+		{
+			return $this -> Handle -> Sheets();
+		}
+
+		/**
+		 * Changes the current sheet to another from the file.
+		 *	Note that changing the sheet will rewind the file to the beginning, even if
+		 *	the current sheet index is provided.
+		 *
+		 * @param int Sheet index
+		 *
+		 * @return bool True if sheet could be changed to the specified one,
+		 *	false if not (for example, if incorrect index was provided.
+		 */
+		public function ChangeSheet($Index)
+		{
+			return $this -> Handle -> ChangeSheet($Index);
+		}
+
+		/**
 		 * Autoloads the required class for the particular spreadsheet type
 		 *
 		 * @param TYPE_* Spreadsheet type, one of TYPE_* constants of this class
@@ -174,7 +216,9 @@
 				throw new Exception('SpreadsheetReader: Invalid type ('.$Type.')');
 			}
 
-			if (!class_exists('SpreadsheetReader_'.$Type))
+			// 2nd parameter is to prevent autoloading for the class.
+			// If autoload works, the require line is unnecessary, if it doesn't, it ends badly.
+			if (!class_exists('SpreadsheetReader_'.$Type, false))
 			{
 				require(dirname(__FILE__).DIRECTORY_SEPARATOR.'SpreadsheetReader_'.$Type.'.php');
 			}
@@ -263,6 +307,42 @@
 				return $this -> Handle -> count();
 			}
 			return 0;
+		}
+
+		/**
+		 * Method for SeekableIterator interface. Takes a posiiton and traverses the file to that position
+		 * The value can be retrieved with a `current()` call afterwards.
+		 *
+		 * @param int Position in file
+		 */
+		public function seek($Position)
+		{
+			if (!$this -> Handle)
+			{
+				throw new OutOfBoundsException('SpreadsheetReader: No file opened');
+			}
+
+			$CurrentIndex = $this -> Handle -> key();
+
+			if ($CurrentIndex != $Position)
+			{
+				if ($Position < $CurrentIndex || is_null($CurrentIndex) || $Position == 0)
+				{
+					$this -> rewind();
+				}
+
+				while ($this -> Handle -> valid() && ($Position > $this -> Handle -> key()))
+				{
+					$this -> Handle -> next();
+				}
+
+				if (!$this -> Handle -> valid())
+				{
+					throw new OutOfBoundsException('SpreadsheetError: Position '.$Position.' not found');
+				}
+			}
+
+			return null;
 		}
 	}
 ?>
