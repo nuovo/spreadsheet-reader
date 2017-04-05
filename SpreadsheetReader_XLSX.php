@@ -20,7 +20,7 @@
 		 *	With large shared string caches there are huge performance gains, however a lot of memory could be used which
 		 *	can be a problem, especially on shared hosting.
 		 */
-		const SHARED_STRING_CACHE_LIMIT = 50000;
+		public static $SHARED_STRING_CACHE_LIMIT = 50000;
 
 		private $Options = array(
 			'TempDir' => '',
@@ -431,7 +431,7 @@
 				}
 			}
 
-			if (!$this -> SharedStringCount || (self::SHARED_STRING_CACHE_LIMIT < $this -> SharedStringCount && self::SHARED_STRING_CACHE_LIMIT !== null))
+			if (!$this -> SharedStringCount || (self::$SHARED_STRING_CACHE_LIMIT < $this -> SharedStringCount && self::$SHARED_STRING_CACHE_LIMIT !== null))
 			{
 				return false;
 			}
@@ -473,7 +473,7 @@
 		 */
 		private function GetSharedString($Index)
 		{
-			if ((self::SHARED_STRING_CACHE_LIMIT === null || self::SHARED_STRING_CACHE_LIMIT > 0) && !empty($this -> SharedStringCache))
+			if ((self::$SHARED_STRING_CACHE_LIMIT === null || self::$SHARED_STRING_CACHE_LIMIT > 0) && !empty($this -> SharedStringCache))
 			{
 				if (isset($this -> SharedStringCache[$Index]))
 				{
