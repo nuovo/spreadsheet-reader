@@ -912,7 +912,7 @@ class Spreadsheet_Excel_Reader {
 	 *
 	 * Some basic initialisation
 	 */
-	function Spreadsheet_Excel_Reader($file='',$store_extended_info=true,$outputEncoding='') {
+	function __construct($file='',$store_extended_info=true,$outputEncoding='') {
 		$this->_ole = new OLERead();
 		$this->setUTFEncoder('iconv');
 		if ($outputEncoding != '') { 
