@@ -321,19 +321,6 @@
 		 */
 		public function __destruct()
 		{
-			foreach ($this -> TempFiles as $TempFile)
-			{
-				@unlink($TempFile);
-			}
-
-			// Better safe than sorry - shouldn't try deleting '.' or '/', or '..'.
-			if (strlen($this -> TempDir) > 2)
-			{
-				@rmdir($this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'worksheets');
-				@rmdir($this -> TempDir.'xl');
-				@rmdir($this -> TempDir);
-			}
-
 			if ($this -> Worksheet && $this -> Worksheet instanceof XMLReader)
 			{
 				$this -> Worksheet -> close();
@@ -355,6 +342,19 @@
 			if ($this -> WorkbookXML)
 			{
 				unset($this -> WorkbookXML);
+			}
+			
+			foreach ($this -> TempFiles as $TempFile)
+			{
+				@unlink($TempFile);
+			}
+
+			// Better safe than sorry - shouldn't try deleting '.' or '/', or '..'.
+			if (strlen($this -> TempDir) > 2)
+			{
+				@rmdir($this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'worksheets');
+				@rmdir($this -> TempDir.'xl');
+				@rmdir($this -> TempDir);
 			}
 		}
 
