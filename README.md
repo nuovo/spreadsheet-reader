@@ -2,7 +2,7 @@
 
 ```
 
-composer require jackmartin\readerexcel
+composer require jackmartin/readerexcel
 
 ```
 
