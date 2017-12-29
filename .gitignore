@@ -1,3 +1,2 @@
-.DS_Store
-test
-materials
+vendor/
+composer.lock
