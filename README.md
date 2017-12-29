@@ -30,6 +30,12 @@ to the `ChangeSheet($Index)` method.
 ### Пример - Example: ###
 
 ```
+
+php reader.php test.xlsx
+
+```
+
+```
 include_once __DIR__ . '/vendor/autoload.php';
 
 use ReaderExcel\SpreadsheetReader;
