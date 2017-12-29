@@ -2,7 +2,7 @@
 
 ```
 
-composer require jackmartin\readerexcel@dev-v0.5.11-fix
+composer require jackmartin\readerexcel
 
 ```
 
