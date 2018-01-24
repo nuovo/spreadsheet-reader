@@ -373,7 +373,7 @@
 					$Attributes = $Sheet -> attributes('r', true);
 					foreach ($Attributes as $Name => $Value)
 					{
-						if ($Name == 'id')
+						if ($Name == 'sheetId')
 						{
 							$SheetID = (int)str_replace('rId', '', (string)$Value);
 							break;
@@ -426,7 +426,11 @@
 			{
 				if ($this -> SharedStrings -> name == 'sst')
 				{
-					$this -> SharedStringCount = $this -> SharedStrings -> getAttribute('count');
+					if ($this -> SharedStrings -> getAttribute('uniqueCount') > 0) {
+                        $this -> SharedStringCount = $this -> SharedStrings -> getAttribute('uniqueCount');
+                    } else if ($this -> SharedStrings -> getAttribute('count') > 0) {
+                        $this -> SharedStringCount = $this -> SharedStrings -> getAttribute('count');
+					}
 					break;
 				}
 			}
