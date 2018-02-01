@@ -286,7 +286,13 @@
 							}
 							else
 							{
-								$LastCellContent = '';
+								// If there is an office value for this cell use that instead of what is actually in the cell; stops formating errors like incorrect scientific notation
+								if ($this -> Content -> getAttribute('office:value') !== null)
+								{
+									$LastCellContent = $this -> Content -> getAttribute('office:value');
+								} else {
+									$LastCellContent = '';
+								}
 							}
 						case 'text:p':
 							if ($this -> Content -> nodeType != XMLReader::END_ELEMENT)
