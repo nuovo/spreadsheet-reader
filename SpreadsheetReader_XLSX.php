@@ -1105,7 +1105,7 @@
 							// Format value if necessary
 							if ($Value !== '' && $StyleId && isset($this -> Styles[$StyleId]))
 							{
-//								$Value = $this -> FormatValue($Value, $StyleId);
+								$Value = $this -> FormatValue($Value, $StyleId);
 							}
 							elseif ($Value)
 							{
