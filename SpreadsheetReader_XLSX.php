@@ -1111,6 +1111,10 @@
 							{
 								$Value = $this -> GeneralFormat($Value);
 							}
+							elseif ($Value)
+							{
+								$Value = $this -> GeneralFormat($Value);
+							}
 
 							$this -> CurrentRow[$Index] = $Value;
 							break;

@@ -1,10 +1,10 @@
 {
-	"name": "nuovo/spreadsheet-reader",
+	"name": "karlis-i/spreadsheet-reader",
 	"description": "Spreadsheet reader library for Excel, OpenOffice and structured text files",
 	"keywords": ["spreadsheet", "xls", "xlsx", "ods", "csv", "excel", "openoffice"],
-	"homepage": "https://github.com/nuovo/spreadsheet-reader",
-	"version": "0.5.11",
-	"time": "2015-04-30",
+	"homepage": "https://github.com/karlis-i/spreadsheet-reader",
+	"version": "0.5.16",
+	"time": "2016-06-02",
 	"type": "library",
 	"license": ["MIT"],
 	"authors": [
@@ -12,11 +12,12 @@
 			"name": "Martins Pilsetnieks",
 			"email": "pilsetnieks@gmail.com",
 			"homepage": "http://www.nuovo.lv/"
+		},
+		{
+			"name": "karlis-i",
+			"email": "karlis.im@gmail.com"
 		}
 	],
-	"support": {
-		"email": "spreadsheet-reader@nuovo.lv"
-	},
 	"require": {
 		"php": ">= 5.3.0",
 		"ext-zip": "*"
