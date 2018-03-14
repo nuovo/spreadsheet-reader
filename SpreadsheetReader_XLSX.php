@@ -468,11 +468,13 @@
 			}
 			$CacheIndex = 0;
 			$CacheValue = '';
+            $skip = false;
 			while ($this -> SharedStrings -> read())
 			{
 				switch ($this -> SharedStrings -> name)
 				{
 					case 'si':
+                        $skip = false;
 						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
 						{
 							$this -> SharedStringCache[$CacheIndex] = $CacheValue;
@@ -480,8 +482,15 @@
 							$CacheValue = '';
 						}
 						break;
+					case 'rPh';
+                        if ($this -> SharedStrings->nodeType == XMLReader::ELEMENT) {
+                            $skip = true;
+                        } else if ($this -> SharedStrings->nodeType == XMLReader::END_ELEMENT) {
+                            $skip = false;
+                        }
+                        break;
 					case 't':
-						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT || $skip)
 						{
 							continue;
 						}
