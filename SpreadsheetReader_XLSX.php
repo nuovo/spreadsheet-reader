@@ -68,6 +68,11 @@
 		 */
 		private $WorkbookXML = false;
 
+        /**
+         * @var SimpleXMLElement XML object for the workbook XML file
+         */
+		private $WorkbookRels = false;
+
 		// Style data
 		/**
 		 * @var SimpleXMLElement XML object for the styles XML file
@@ -222,6 +227,25 @@
 				throw new Exception('SpreadsheetReader_XLSX: File not readable ('.$Filepath.') (Error '.$Status.')');
 			}
 
+			if ($Zip->locateName('xl/_rels/workbook.xml.rels') !== false) {
+                $WorkbookRelsXML = new  SimpleXMLElement($Zip -> getFromName('xl/_rels/workbook.xml.rels'));
+				foreach ($WorkbookRelsXML as $v) {
+					$attributes = $v->attributes();
+                    $Id = false;
+                    $Target = false;
+					foreach ($attributes as $a => $b) {
+						if ($a == 'Id') {
+							$Id = (string)$b;
+						} elseif ($a == 'Target') {
+							$Target = (string)$b;
+						}
+					}
+					if ($Id && $Target) {
+                        $this->WorkbookRels[$Id] = $Target;
+					}
+				}
+			}
+
 			// Getting the general workbook information
 			if ($Zip -> locateName('xl/workbook.xml') !== false)
 			{
@@ -234,7 +258,6 @@
 				$this -> SharedStringsPath = $this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'sharedStrings.xml';
 				$Zip -> extractTo($this -> TempDir, 'xl/sharedStrings.xml');
 				$this -> TempFiles[] = $this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'sharedStrings.xml';
-
 				if (is_readable($this -> SharedStringsPath))
 				{
 					$this -> SharedStrings = new XMLReader;
@@ -245,15 +268,15 @@
 
 			$Sheets = $this -> Sheets();
 
-			foreach ($this -> Sheets as $Index => $Name)
+			foreach ($this -> Sheets as $SheetID => $Name)
 			{
-				if ($Zip -> locateName('xl/worksheets/sheet'.$Index.'.xml') !== false)
+                $file_name = $this->WorkbookRels[$SheetID];
+				if ($Zip -> locateName('xl/'.$file_name) !== false)
 				{
-					$Zip -> extractTo($this -> TempDir, 'xl/worksheets/sheet'.$Index.'.xml');
-					$this -> TempFiles[] = $this -> TempDir.'xl'.DIRECTORY_SEPARATOR.'worksheets'.DIRECTORY_SEPARATOR.'sheet'.$Index.'.xml';
+					$Zip -> extractTo($this -> TempDir, 'xl/'.$file_name);
+					$this -> TempFiles[] = $this -> TempDir.'xl'. DIRECTORY_SEPARATOR . $file_name;
 				}
 			}
-
 			$this -> ChangeSheet(0);
 
 			// If worksheet is present and is OK, parse the styles already
@@ -278,7 +301,7 @@
 						}
 					}
 				}
-				
+
 				if ($this -> StylesXML -> numFmts && $this -> StylesXML -> numFmts -> numFmt)
 				{
 					foreach ($this -> StylesXML -> numFmts -> numFmt as $Index => $NumFmt)
@@ -375,15 +398,17 @@
 					{
 						if ($Name == 'id')
 						{
-							$SheetID = (int)str_replace('rId', '', (string)$Value);
+                            $SheetID = (string)$Value;
+                            if (isset($this->WorkbookRels[$SheetID])) {
+                                $this -> Sheets[$SheetID] = (string)$Sheet['name'];
+                            }
 							break;
 						}
 					}
-
-					$this -> Sheets[$SheetID] = (string)$Sheet['name'];
 				}
 				ksort($this -> Sheets);
 			}
+
 			return array_values($this -> Sheets);
 		}
 
@@ -397,16 +422,18 @@
 		public function ChangeSheet($Index)
 		{
 			$RealSheetIndex = false;
+            $fileName = false;
 			$Sheets = $this -> Sheets();
 			if (isset($Sheets[$Index]))
 			{
 				$SheetIndexes = array_keys($this -> Sheets);
 				$RealSheetIndex = $SheetIndexes[$Index];
 			}
-
-			$TempWorksheetPath = $this -> TempDir.'xl/worksheets/sheet'.$RealSheetIndex.'.xml';
-
-			if ($RealSheetIndex !== false && is_readable($TempWorksheetPath))
+			if (isset($this->WorkbookRels[$RealSheetIndex])) {
+                $fileName = $this->WorkbookRels[$RealSheetIndex];
+            }
+			$TempWorksheetPath = $this -> TempDir.'xl/'.$fileName;
+			if ($fileName !== false && is_readable($TempWorksheetPath))
 			{
 				$this -> WorksheetPath = $TempWorksheetPath;
 
@@ -426,7 +453,11 @@
 			{
 				if ($this -> SharedStrings -> name == 'sst')
 				{
-					$this -> SharedStringCount = $this -> SharedStrings -> getAttribute('count');
+                    if ($this -> SharedStrings -> getAttribute('uniqueCount') > 0) {
+                        $this -> SharedStringCount = $this -> SharedStrings -> getAttribute('uniqueCount');
+                    } else if ($this -> SharedStrings -> getAttribute('count') > 0) {
+                        $this -> SharedStringCount = $this -> SharedStrings -> getAttribute('count');
+					}
 					break;
 				}
 			}
@@ -435,14 +466,15 @@
 			{
 				return false;
 			}
-
 			$CacheIndex = 0;
 			$CacheValue = '';
+            $skip = false;
 			while ($this -> SharedStrings -> read())
 			{
 				switch ($this -> SharedStrings -> name)
 				{
 					case 'si':
+                        $skip = false;
 						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
 						{
 							$this -> SharedStringCache[$CacheIndex] = $CacheValue;
@@ -450,8 +482,15 @@
 							$CacheValue = '';
 						}
 						break;
+					case 'rPh';
+                        if ($this -> SharedStrings->nodeType == XMLReader::ELEMENT) {
+                            $skip = true;
+                        } else if ($this -> SharedStrings->nodeType == XMLReader::END_ELEMENT) {
+                            $skip = false;
+                        }
+                        break;
 					case 't':
-						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT || $skip)
 						{
 							continue;
 						}
@@ -459,9 +498,8 @@
 						break;
 				}
 			}
-
 			$this -> SharedStrings -> close();
-			return true;
+            return true;
 		}
 
 		/**
@@ -549,7 +587,7 @@
 					else
 					{
 						$this -> SSOpen = true;
-	
+
 						if ($this -> SharedStringIndex < $Index)
 						{
 							$this -> SSOpen = false;
@@ -662,7 +700,7 @@
 				{
 					$Sections = explode(';', $Format['Code']);
 					$Format['Code'] = $Sections[0];
-	
+
 					switch (count($Sections))
 					{
 						case 2:
@@ -866,7 +904,7 @@
 						$AdjDecimalDivisor = $DecimalDivisor/$GCD;
 
 						if (
-							strpos($Format['Code'], '0') !== false || 
+							strpos($Format['Code'], '0') !== false ||
 							strpos($Format['Code'], '#') !== false ||
 							substr($Format['Code'], 0, 3) == '? ?'
 						)
@@ -913,7 +951,7 @@
 						$Value = preg_replace('', $Format['Currency'], $Value);
 					}
 				}
-				
+
 			}
 
 			return $Value;
@@ -937,10 +975,10 @@
 		}
 
 		// !Iterator interface methods
-		/** 
+		/**
 		 * Rewind the Iterator to the first element.
 		 * Similar to the reset() function for arrays in PHP
-		 */ 
+		 */
 		public function rewind()
 		{
 			// Removed the check whether $this -> Index == 0 otherwise ChangeSheet doesn't work properly
@@ -980,10 +1018,10 @@
 			return $this -> CurrentRow;
 		}
 
-		/** 
-		 * Move forward to next element. 
-		 * Similar to the next() function for arrays in PHP 
-		 */ 
+		/**
+		 * Move forward to next element.
+		 * Similar to the next() function for arrays in PHP
+		 */
 		public function next()
 		{
 			$this -> Index++;
@@ -1117,23 +1155,23 @@
 			return $this -> CurrentRow;
 		}
 
-		/** 
+		/**
 		 * Return the identifying key of the current element.
 		 * Similar to the key() function for arrays in PHP
 		 *
 		 * @return mixed either an integer or a string
-		 */ 
+		 */
 		public function key()
 		{
 			return $this -> Index;
 		}
 
-		/** 
+		/**
 		 * Check if there is a current element after calls to rewind() or next().
 		 * Used to check if we've iterated to the end of the collection
 		 *
 		 * @return boolean FALSE if there's nothing more to iterate over
-		 */ 
+		 */
 		public function valid()
 		{
 			return $this -> Valid;
