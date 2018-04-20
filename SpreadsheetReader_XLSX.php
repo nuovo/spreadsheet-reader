@@ -929,7 +929,7 @@
 		public function GeneralFormat($Value)
 		{
 			// Numeric format
-			if (is_numeric($Value))
+            if (is_numeric($Value) && preg_match('/^(?:-)?([1-9]|(0\.))/', $Value))
 			{
 				$Value = (float)$Value;
 			}
