@@ -1,5 +1,7 @@
 # Установка - Install Composer
 
+[![Latest Stable Version](https://poser.pugx.org/jackmartin/readerexcel/v/stable)](https://packagist.org/packages/jackmartin/readerexcel) [![Total Downloads](https://poser.pugx.org/jackmartin/readerexcel/downloads)](https://packagist.org/packages/jackmartin/readerexcel) [![License](https://poser.pugx.org/jackmartin/readerexcel/license)](https://packagist.org/packages/jackmartin/readerexcel)
+
 ```
 
 composer require jackmartin/readerexcel
