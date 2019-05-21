@@ -36,8 +36,9 @@
 		 * @param string Path to file
 		 * @param string Original filename (in case of an uploaded file), used to determine file type, optional
 		 * @param string MIME type from an upload, used to determine file type, optional
+		 * @param array Options passed to reader for file type, see documentation for specific reader class
 		 */
-		public function __construct($Filepath, $OriginalFilename = false, $MimeType = false)
+		public function __construct($Filepath, $OriginalFilename = false, $MimeType = false, Array $Options = null)
 		{
 			if (!is_readable($Filepath))
 			{
@@ -61,6 +62,11 @@
 			if (!empty($MimeType) && !is_scalar($MimeType))
 			{
 				throw new Exception('SpreadsheetReader: Mime type (3nd parameter) path is not a string or a scalar value.');
+			}
+
+			if ($Options)
+			{
+				$this -> Options = $Options;
 			}
 
 			// 1. Determine type
@@ -141,7 +147,7 @@
 			if ($this -> Type == self::TYPE_XLS)
 			{
 				self::Load(self::TYPE_XLS);
-				$this -> Handle = new SpreadsheetReader_XLS($Filepath);
+				$this -> Handle = new SpreadsheetReader_XLS($Filepath, $this -> Options);
 				if ($this -> Handle -> Error)
 				{
 					$this -> Handle -> __destruct();
@@ -163,7 +169,7 @@
 			{
 				case self::TYPE_XLSX:
 					self::Load(self::TYPE_XLSX);
-					$this -> Handle = new SpreadsheetReader_XLSX($Filepath);
+					$this -> Handle = new SpreadsheetReader_XLSX($Filepath, $this -> Options);
 					break;
 				case self::TYPE_CSV:
 					self::Load(self::TYPE_CSV);
@@ -226,10 +232,10 @@
 
 		// !Iterator interface methods
 
-		/** 
+		/**
 		 * Rewind the Iterator to the first element.
 		 * Similar to the reset() function for arrays in PHP
-		 */ 
+		 */
 		public function rewind()
 		{
 			$this -> Index = 0;
@@ -239,7 +245,7 @@
 			}
 		}
 
-		/** 
+		/**
 		 * Return the current element.
 		 * Similar to the current() function for arrays in PHP
 		 *
@@ -254,10 +260,10 @@
 			return null;
 		}
 
-		/** 
-		 * Move forward to next element. 
-		 * Similar to the next() function for arrays in PHP 
-		 */ 
+		/**
+		 * Move forward to next element.
+		 * Similar to the next() function for arrays in PHP
+		 */
 		public function next()
 		{
 			if ($this -> Handle)
@@ -269,12 +275,12 @@
 			return null;
 		}
 
-		/** 
+		/**
 		 * Return the identifying key of the current element.
 		 * Similar to the key() function for arrays in PHP
 		 *
 		 * @return mixed either an integer or a string
-		 */ 
+		 */
 		public function key()
 		{
 			if ($this -> Handle)
@@ -284,12 +290,12 @@
 			return null;
 		}
 
-		/** 
+		/**
 		 * Check if there is a current element after calls to rewind() or next().
 		 * Used to check if we've iterated to the end of the collection
 		 *
 		 * @return boolean FALSE if there's nothing more to iterate over
-		 */ 
+		 */
 		public function valid()
 		{
 			if ($this -> Handle)
