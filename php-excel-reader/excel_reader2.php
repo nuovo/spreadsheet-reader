@@ -648,6 +648,16 @@ class Spreadsheet_Excel_Reader {
 		return $out;
 	}
 	
+	function dumptoarray($sheet=0) {
+		$arr = array();
+
+		for($row=1;$row<=$this->rowcount($sheet);$row++)
+			for($col=1;$col<=$this->colcount($sheet);$col++)
+				$arr[$row][$col] = $this->val($row,$col,$sheet);
+
+		return $arr;
+	}
+	
 	// --------------
 	// END PUBLIC API
 
