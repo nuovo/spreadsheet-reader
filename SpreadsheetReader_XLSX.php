@@ -20,7 +20,7 @@
 		 *	With large shared string caches there are huge performance gains, however a lot of memory could be used which
 		 *	can be a problem, especially on shared hosting.
 		 */
-		const SHARED_STRING_CACHE_LIMIT = 50000;
+		const SHARED_STRING_CACHE_LIMIT = null;
 
 		private $Options = array(
 			'TempDir' => '',
@@ -370,23 +370,29 @@
 				$this -> Sheets = array();
 				foreach ($this -> WorkbookXML -> sheets -> sheet as $Index => $Sheet)
 				{
-					$Attributes = $Sheet -> attributes('r', true);
-					foreach ($Attributes as $Name => $Value)
+					$AttributesWithPrefix = $Sheet -> attributes('r', true);
+					$Attributes = $Sheet -> attributes();
+
+					$rId = 0;
+					$sheetId = 0;
+
+					foreach ($AttributesWithPrefix as $Name => $Value)
 					{
 						if ($Name == 'id')
 						{
-							//$SheetID = (int)str_replace('rId', '', (string)$Value);
-							/**
-							 * Get sheet id with any format string wrapper around it
-							 * eg box/spout writes xslx where sheet id is
-							 * formatted as rIdSheet{n} not rId{0}
-							 */
-							$SheetID= intval(preg_replace('/[^0-9]+/', '', $Value), 10);
+							$rId = (int)str_replace('rId', '', (string)$Value);
+							break;
+						}
+					}
+					foreach ($Attributes as $Name => $Value)
+					{
+						if ($Name == 'sheetId') {
+							$sheetId = (int)$Value;
 							break;
 						}
 					}
 
-					$this -> Sheets[$SheetID] = (string)$Sheet['name'];
+					$this -> Sheets[min($rId, $sheetId)] = (string)$Sheet['name'];
 				}
 				ksort($this -> Sheets);
 			}
@@ -1100,6 +1106,14 @@
 							if ($Value !== '' && $StyleId && isset($this -> Styles[$StyleId]))
 							{
 								$Value = $this -> FormatValue($Value, $StyleId);
+							}
+							elseif ($Value)
+							{
+								$Value = $this -> GeneralFormat($Value);
+							}
+							elseif ($Value)
+							{
+								$Value = $this -> GeneralFormat($Value);
 							}
 							elseif ($Value)
 							{
