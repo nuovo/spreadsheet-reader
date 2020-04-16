@@ -465,7 +465,7 @@
 					case 't':
 						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
 						{
-							continue;
+							break;
 						}
 						$CacheValue .= $this -> SharedStrings -> readString();
 						break;
@@ -568,7 +568,7 @@
 							$this -> SharedStrings -> next('si');
 							$this -> SSForwarded = true;
 							$this -> SharedStringIndex++;
-							continue;
+							break;
 						}
 						else
 						{
@@ -590,7 +590,7 @@
 						case 't':
 							if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
 							{
-								continue;
+								break;
 							}
 							$Value .= $this -> SharedStrings -> readString();
 							break;
@@ -1058,7 +1058,7 @@
 							// If it is a closing tag, skip it
 							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
 							{
-								continue;
+								break;
 							}
 
 							$StyleId = (int)$this -> Worksheet -> getAttribute('s');
@@ -1092,7 +1092,7 @@
 						case 'is':
 							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
 							{
-								continue;
+								break;
 							}
 
 							$Value = $this -> Worksheet -> readString();
