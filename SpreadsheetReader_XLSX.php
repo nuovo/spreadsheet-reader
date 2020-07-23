@@ -922,7 +922,7 @@
 					// Currency/Accounting
 					if ($Format['Currency'])
 					{
-						$Value = preg_replace('', $Format['Currency'], $Value);
+						$Value = preg_replace('/\[.+\]/', $Format['Currency'], $Value);
 					}
 				}
 				
