@@ -941,7 +941,7 @@
 		public function GeneralFormat($Value)
 		{
 			// Numeric format
-			if (is_numeric($Value))
+			if (is_numeric($Value) && $Value[0] != 0)
 			{
 				$Value = (float)$Value;
 			}
