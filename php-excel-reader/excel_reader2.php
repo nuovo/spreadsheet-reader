@@ -906,6 +906,10 @@ class Spreadsheet_Excel_Reader {
 			$pattern = strval($num);
 		}
 
+		if (preg_match('/\$(?<currency>.*)-/', $pattern, $matches)) {
+			$pattern = preg_replace('/\[.+\]/', $matches['currency'], $pattern);
+		}
+
 		return array(
 			'string'=>$pattern,
 			'formatColor'=>$color

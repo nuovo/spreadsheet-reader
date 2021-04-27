@@ -465,7 +465,7 @@
 					case 't':
 						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
 						{
-							continue;
+							break;
 						}
 						$CacheValue .= $this -> SharedStrings -> readString();
 						break;
@@ -568,7 +568,7 @@
 							$this -> SharedStrings -> next('si');
 							$this -> SSForwarded = true;
 							$this -> SharedStringIndex++;
-							continue;
+							break;
 						}
 						else
 						{
@@ -590,7 +590,7 @@
 						case 't':
 							if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
 							{
-								continue;
+								break;
 							}
 							$Value .= $this -> SharedStrings -> readString();
 							break;
@@ -922,7 +922,7 @@
 					// Currency/Accounting
 					if ($Format['Currency'])
 					{
-						$Value = preg_replace('', $Format['Currency'], $Value);
+						$Value = preg_replace('/\[.+\]/', $Format['Currency'], $Value);
 					}
 				}
 				
@@ -941,7 +941,7 @@
 		public function GeneralFormat($Value)
 		{
 			// Numeric format
-			if (is_numeric($Value))
+			if (is_numeric($Value) && $Value[0] != 0)
 			{
 				$Value = (float)$Value;
 			}
@@ -1058,7 +1058,7 @@
 							// If it is a closing tag, skip it
 							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
 							{
-								continue;
+								break;
 							}
 
 							$StyleId = (int)$this -> Worksheet -> getAttribute('s');
@@ -1092,7 +1092,7 @@
 						case 'is':
 							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
 							{
-								continue;
+								break;
 							}
 
 							$Value = $this -> Worksheet -> readString();
