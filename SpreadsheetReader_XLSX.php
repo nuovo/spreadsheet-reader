@@ -20,7 +20,7 @@
 		 *	With large shared string caches there are huge performance gains, however a lot of memory could be used which
 		 *	can be a problem, especially on shared hosting.
 		 */
-		const SHARED_STRING_CACHE_LIMIT = 50000;
+		const SHARED_STRING_CACHE_LIMIT = null;
 
 		private $Options = array(
 			'TempDir' => '',
@@ -370,17 +370,29 @@
 				$this -> Sheets = array();
 				foreach ($this -> WorkbookXML -> sheets -> sheet as $Index => $Sheet)
 				{
-					$Attributes = $Sheet -> attributes('r', true);
-					foreach ($Attributes as $Name => $Value)
+					$AttributesWithPrefix = $Sheet -> attributes('r', true);
+					$Attributes = $Sheet -> attributes();
+
+					$rId = 0;
+					$sheetId = 0;
+
+					foreach ($AttributesWithPrefix as $Name => $Value)
 					{
 						if ($Name == 'id')
 						{
-							$SheetID = (int)str_replace('rId', '', (string)$Value);
+							$rId = (int)str_replace('rId', '', (string)$Value);
+							break;
+						}
+					}
+					foreach ($Attributes as $Name => $Value)
+					{
+						if ($Name == 'sheetId') {
+							$sheetId = (int)$Value;
 							break;
 						}
 					}
 
-					$this -> Sheets[$SheetID] = (string)$Sheet['name'];
+					$this -> Sheets[min($rId, $sheetId)] = (string)$Sheet['name'];
 				}
 				ksort($this -> Sheets);
 			}
@@ -453,7 +465,7 @@
 					case 't':
 						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
 						{
-							continue;
+							break;
 						}
 						$CacheValue .= $this -> SharedStrings -> readString();
 						break;
@@ -556,7 +568,7 @@
 							$this -> SharedStrings -> next('si');
 							$this -> SSForwarded = true;
 							$this -> SharedStringIndex++;
-							continue;
+							break;
 						}
 						else
 						{
@@ -578,7 +590,7 @@
 						case 't':
 							if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
 							{
-								continue;
+								break;
 							}
 							$Value .= $this -> SharedStrings -> readString();
 							break;
@@ -910,7 +922,7 @@
 					// Currency/Accounting
 					if ($Format['Currency'])
 					{
-						$Value = preg_replace('', $Format['Currency'], $Value);
+						$Value = preg_replace('/\[.+\]/', $Format['Currency'], $Value);
 					}
 				}
 				
@@ -929,7 +941,7 @@
 		public function GeneralFormat($Value)
 		{
 			// Numeric format
-			if (is_numeric($Value))
+			if (is_numeric($Value) && $Value[0] != 0)
 			{
 				$Value = (float)$Value;
 			}
@@ -1046,7 +1058,7 @@
 							// If it is a closing tag, skip it
 							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
 							{
-								continue;
+								break;
 							}
 
 							$StyleId = (int)$this -> Worksheet -> getAttribute('s');
@@ -1080,7 +1092,7 @@
 						case 'is':
 							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
 							{
-								continue;
+								break;
 							}
 
 							$Value = $this -> Worksheet -> readString();
@@ -1094,6 +1106,14 @@
 							if ($Value !== '' && $StyleId && isset($this -> Styles[$StyleId]))
 							{
 								$Value = $this -> FormatValue($Value, $StyleId);
+							}
+							elseif ($Value)
+							{
+								$Value = $this -> GeneralFormat($Value);
+							}
+							elseif ($Value)
+							{
+								$Value = $this -> GeneralFormat($Value);
 							}
 							elseif ($Value)
 							{
