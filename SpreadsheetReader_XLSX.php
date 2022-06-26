@@ -370,12 +370,12 @@
 				$this -> Sheets = array();
 				foreach ($this -> WorkbookXML -> sheets -> sheet as $Index => $Sheet)
 				{
-					$Attributes = $Sheet -> attributes('r', true);
+					$Attributes = $Sheet -> attributes();
 					foreach ($Attributes as $Name => $Value)
 					{
-						if ($Name == 'id')
+						if ($Name == 'sheetId')
 						{
-							$SheetID = (int)str_replace('rId', '', (string)$Value);
+							$SheetID = (int)$Value;
 							break;
 						}
 					}
