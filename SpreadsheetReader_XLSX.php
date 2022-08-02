@@ -451,11 +451,10 @@
 						}
 						break;
 					case 't':
-						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+						if ($this -> SharedStrings -> nodeType != XMLReader::END_ELEMENT)
 						{
-							continue;
+							$CacheValue .= $this -> SharedStrings -> readString();
 						}
-						$CacheValue .= $this -> SharedStrings -> readString();
 						break;
 				}
 			}
@@ -576,11 +575,10 @@
 					switch ($this -> SharedStrings -> name)
 					{
 						case 't':
-							if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+							if ($this -> SharedStrings -> nodeType != XMLReader::END_ELEMENT)
 							{
-								continue;
+								$Value .= $this -> SharedStrings -> readString();
 							}
-							$Value .= $this -> SharedStrings -> readString();
 							break;
 						case 'si':
 							if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
@@ -941,7 +939,7 @@
 		 * Rewind the Iterator to the first element.
 		 * Similar to the reset() function for arrays in PHP
 		 */ 
-		public function rewind()
+		public function rewind(): void
 		{
 			// Removed the check whether $this -> Index == 0 otherwise ChangeSheet doesn't work properly
 
@@ -956,12 +954,21 @@
 				$this -> Worksheet = new XMLReader;
 			}
 
-			$this -> Worksheet -> open($this -> WorksheetPath);
+			try{
+				if(empty($this -> WorksheetPath)){
+					throw new Exception('SpreadsheetReader_XLSX: Error in File or sheet name');
+				} else {
+					$this -> Worksheet -> open($this -> WorksheetPath);
 
-			$this -> Valid = true;
-			$this -> RowOpen = false;
-			$this -> CurrentRow = false;
-			$this -> Index = 0;
+					$this -> Valid = true;
+					$this -> RowOpen = false;
+					$this -> CurrentRow = false;
+					$this -> Index = 0;
+				
+				}
+			} catch (Exception $ex){
+				throw new Exception('SpreadsheetReader_XLSX: Error in File or sheet name');
+			}
 		}
 
 		/**
@@ -970,7 +977,7 @@
 		 *
 		 * @return mixed current element from the collection
 		 */
-		public function current()
+		public function current(): mixed
 		{
 			if ($this -> Index == 0 && $this -> CurrentRow === false)
 			{
@@ -984,7 +991,7 @@
 		 * Move forward to next element. 
 		 * Similar to the next() function for arrays in PHP 
 		 */ 
-		public function next()
+		public function next(): void
 		{
 			$this -> Index++;
 
@@ -1046,7 +1053,8 @@
 							// If it is a closing tag, skip it
 							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
 							{
-								continue;
+								break;
+								//continue;
 							}
 
 							$StyleId = (int)$this -> Worksheet -> getAttribute('s');
@@ -1080,7 +1088,8 @@
 						case 'is':
 							if ($this -> Worksheet -> nodeType == XMLReader::END_ELEMENT)
 							{
-								continue;
+								break;
+								//continue;
 							}
 
 							$Value = $this -> Worksheet -> readString();
@@ -1114,7 +1123,7 @@
 				}
 			}
 
-			return $this -> CurrentRow;
+			//return $this -> CurrentRow;
 		}
 
 		/** 
@@ -1123,7 +1132,7 @@
 		 *
 		 * @return mixed either an integer or a string
 		 */ 
-		public function key()
+		public function key(): mixed
 		{
 			return $this -> Index;
 		}
@@ -1134,7 +1143,7 @@
 		 *
 		 * @return boolean FALSE if there's nothing more to iterate over
 		 */ 
-		public function valid()
+		public function valid(): bool
 		{
 			return $this -> Valid;
 		}
@@ -1144,7 +1153,7 @@
 		 * Ostensibly should return the count of the contained items but this just returns the number
 		 * of rows read so far. It's not really correct but at least coherent.
 		 */
-		public function count()
+		public function count(): int
 		{
 			return $this -> Index + 1;
 		}
