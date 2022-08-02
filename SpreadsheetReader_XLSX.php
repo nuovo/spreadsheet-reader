@@ -451,11 +451,10 @@
 						}
 						break;
 					case 't':
-						if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+						if ($this -> SharedStrings -> nodeType != XMLReader::END_ELEMENT)
 						{
-							continue;
+							$CacheValue .= $this -> SharedStrings -> readString();
 						}
-						$CacheValue .= $this -> SharedStrings -> readString();
 						break;
 				}
 			}
@@ -576,11 +575,10 @@
 					switch ($this -> SharedStrings -> name)
 					{
 						case 't':
-							if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
+							if ($this -> SharedStrings -> nodeType != XMLReader::END_ELEMENT)
 							{
-								continue;
+								$Value .= $this -> SharedStrings -> readString();
 							}
-							$Value .= $this -> SharedStrings -> readString();
 							break;
 						case 'si':
 							if ($this -> SharedStrings -> nodeType == XMLReader::END_ELEMENT)
