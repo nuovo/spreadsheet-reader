@@ -13,7 +13,7 @@
 		const TYPE_ODS = 'ODS';
 
 		private $Options = array(
-			'Delimiter' => '',
+			'Delimiter' => ';',
 			'Enclosure' => '"'
 		);
 
@@ -37,7 +37,7 @@
 		 * @param string Original filename (in case of an uploaded file), used to determine file type, optional
 		 * @param string MIME type from an upload, used to determine file type, optional
 		 */
-		public function __construct($Filepath, $OriginalFilename = false, $MimeType = false)
+		public function __construct($Filepath, $OriginalFilename = false, $MimeType = false, $Options = array())
 		{
 			if (!is_readable($Filepath))
 			{
@@ -158,12 +158,15 @@
 				}
 			}
 
+			// Get options before creating handle
+			$this -> Options = array_merge($this -> Options, $Options);
+
 			// 2. Create handle
 			switch ($this -> Type)
 			{
 				case self::TYPE_XLSX:
 					self::Load(self::TYPE_XLSX);
-					$this -> Handle = new SpreadsheetReader_XLSX($Filepath);
+					$this -> Handle = new SpreadsheetReader_XLSX($Filepath, $this -> Options);
 					break;
 				case self::TYPE_CSV:
 					self::Load(self::TYPE_CSV);

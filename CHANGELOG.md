@@ -1,3 +1,7 @@
+### v.0.5.12  2016-03-18
+
+- Added a fix for recognising dates in XLS files created by LibreOffice
+
 ### v.0.5.11  2015-04-30
 
 - Added a special case for cells formatted as text in XLSX. Previously leading zeros would get truncated if a text cell contained only numbers.
@@ -50,10 +54,10 @@ Currently only decimal number values are converted to PHP's floats.
 
 ### v.0.5.1  2013-06-27
 
-- Fixed file type choice when using mime-types (previously there were problems with  
+- Fixed file type choice when using mime-types (previously there were problems with
 XLSX and ODS mime-types) (Thanks to [incratec](https://github.com/incratec))
 
-- Fixed an error in XLSX iterator where `current()` would advance the iterator forward  
+- Fixed an error in XLSX iterator where `current()` would advance the iterator forward
 with each call. (Thanks to [osuwariboy](https://github.com/osuwariboy))
 
 ### v.0.5.0  2013-06-17
@@ -62,19 +66,19 @@ with each call. (Thanks to [osuwariboy](https://github.com/osuwariboy))
 	- The `Sheets()` method lets you retrieve a list of all sheets present in the file.
 	- `ChangeSheet($Index)` method changes the sheet in the reader to the one specified.
 
-- Previously temporary files that were extracted, were deleted after the SpreadsheetReader  
-was destroyed but the empty directories remained. Now those are cleaned up as well.  
+- Previously temporary files that were extracted, were deleted after the SpreadsheetReader
+was destroyed but the empty directories remained. Now those are cleaned up as well.
 
 ### v.0.4.3  2013-06-14
 
-- Bugfix for shared string caching in XLSX files. When the shared string count was larger  
-than the caching limit, instead of them being read from file, empty strings were returned.  
+- Bugfix for shared string caching in XLSX files. When the shared string count was larger
+than the caching limit, instead of them being read from file, empty strings were returned.
 
 ### v.0.4.2  2013-06-02
 
-- XLS file reading relies on the external Spreadsheet_Excel_Reader class which, by default,  
-reads additional information about cells like fonts, styles, etc. Now that is disabled  
-to save some memory since the style data is unnecessary anyway.  
+- XLS file reading relies on the external Spreadsheet_Excel_Reader class which, by default,
+reads additional information about cells like fonts, styles, etc. Now that is disabled
+to save some memory since the style data is unnecessary anyway.
 (Thanks to [ChALkeR](https://github.com/ChALkeR) for the tip.)
 
 Martins Pilsetnieks  <pilsetnieks@gmail.com>

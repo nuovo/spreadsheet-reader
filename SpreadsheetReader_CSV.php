@@ -11,7 +11,8 @@
 		 */
 		private $Options = array(
 			'Delimiter' => ';',
-			'Enclosure' => '"'
+			'Enclosure' => '"',
+			'Encoding' => 'auto'
 		);
 
 		private $Encoding = 'UTF-8';
@@ -49,6 +50,43 @@
 			$this -> Options = array_merge($this -> Options, $Options);
 			$this -> Handle = fopen($Filepath, 'r');
 
+			if( $this -> Options['Encoding'] == "auto" )
+			{
+				$this -> AutoDetectEncoding();
+			}
+			else{
+				$this -> Encoding = $this -> Options['Encoding'];
+			}
+
+			// Checking for the delimiter if it should be determined automatically
+			if (!$this -> Options['Delimiter'])
+			{
+				// fgetcsv needs single-byte separators
+				$Semicolon = ';';
+				$Tab = "\t";
+				$Comma = ',';
+
+				// Reading the first row and checking if a specific separator character
+				// has more columns than others (it means that most likely that is the delimiter).
+				$SemicolonCount = count(fgetcsv($this -> Handle, null, $Semicolon));
+				fseek($this -> Handle, $this -> BOMLength);
+				$TabCount = count(fgetcsv($this -> Handle, null, $Tab));
+				fseek($this -> Handle, $this -> BOMLength);
+				$CommaCount = count(fgetcsv($this -> Handle, null, $Comma));
+				fseek($this -> Handle, $this -> BOMLength);
+
+				$Delimiter = $Semicolon;
+				if ($TabCount > $SemicolonCount || $CommaCount > $SemicolonCount)
+				{
+					$Delimiter = $CommaCount > $TabCount ? $Comma : $Tab;
+				}
+
+				$this -> Options['Delimiter'] = $Delimiter;
+			}
+		}
+
+		private function AutoDetectEncoding()
+		{
 			// Checking the file for byte-order mark to determine encoding
 			$BOM16 = bin2hex(fread($this -> Handle, 2));
 			if ($BOM16 == 'fffe')
@@ -94,32 +132,6 @@
 			if ($this -> BOMLength)
 			{
 				fseek($this -> Handle, $this -> BOMLength);
-			}
-
-			// Checking for the delimiter if it should be determined automatically
-			if (!$this -> Options['Delimiter'])
-			{
-				// fgetcsv needs single-byte separators
-				$Semicolon = ';';
-				$Tab = "\t";
-				$Comma = ',';
-
-				// Reading the first row and checking if a specific separator character
-				// has more columns than others (it means that most likely that is the delimiter).
-				$SemicolonCount = count(fgetcsv($this -> Handle, null, $Semicolon));
-				fseek($this -> Handle, $this -> BOMLength);
-				$TabCount = count(fgetcsv($this -> Handle, null, $Tab));
-				fseek($this -> Handle, $this -> BOMLength);
-				$CommaCount = count(fgetcsv($this -> Handle, null, $Comma));
-				fseek($this -> Handle, $this -> BOMLength);
-
-				$Delimiter = $Semicolon;
-				if ($TabCount > $SemicolonCount || $CommaCount > $SemicolonCount)
-				{
-					$Delimiter = $CommaCount > $TabCount ? $Comma : $Tab;
-				}
-
-				$this -> Options['Delimiter'] = $Delimiter;
 			}
 		}
 

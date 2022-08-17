@@ -57,6 +57,15 @@ Example:
 If a sheet is changed to the same that is currently open, the position in the file still reverts to the beginning, so as to conform
 to the same behavior as when changed to a different sheet.
 
+Passing options:
+
+	<?php
+		$Options = array(
+			'TempDir' => "/tmp"
+        );
+		$Reader = new SpreadsheetReader('example.xlsx', false, false, $Options);
+	?>
+
 ### Testing
 
 From the command line:
