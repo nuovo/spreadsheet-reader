@@ -165,7 +165,7 @@
 		 * Rewind the Iterator to the first element.
 		 * Similar to the reset() function for arrays in PHP
 		 */ 
-		public function rewind()
+		public function rewind(): void
 		{
 			$this -> Index = 0;
 		}
@@ -176,6 +176,7 @@
 		 *
 		 * @return mixed current element from the collection
 		 */
+	    #[\ReturnTypeWillChange]
 		public function current()
 		{
 			if ($this -> Index == 0)
@@ -190,7 +191,7 @@
 		 * Move forward to next element. 
 		 * Similar to the next() function for arrays in PHP 
 		 */ 
-		public function next()
+		public function next(): void
 		{
 			// Internal counter is advanced here instead of the if statement
 			//	because apparently it's fully possible that an empty row will not be
@@ -199,26 +200,26 @@
 
 			if ($this -> Error)
 			{
-				return array();
+				return;
 			}
 			elseif (isset($this -> Handle -> sheets[$this -> CurrentSheet]['cells'][$this -> Index]))
 			{
 				$this -> CurrentRow = $this -> Handle -> sheets[$this -> CurrentSheet]['cells'][$this -> Index];
 				if (!$this -> CurrentRow)
 				{
-					return array();
+					return;
 				}
 
 				$this -> CurrentRow = $this -> CurrentRow + $this -> EmptyRow;
 				ksort($this -> CurrentRow);
 
 				$this -> CurrentRow = array_values($this -> CurrentRow);
-				return $this -> CurrentRow;
+				return;
 			}
 			else
 			{
 				$this -> CurrentRow = $this -> EmptyRow;
-				return $this -> CurrentRow;
+				return;
 			}
 		}
 
@@ -228,6 +229,7 @@
 		 *
 		 * @return mixed either an integer or a string
 		 */ 
+	    #[\ReturnTypeWillChange]
 		public function key()
 		{
 			return $this -> Index;
@@ -239,7 +241,7 @@
 		 *
 		 * @return boolean FALSE if there's nothing more to iterate over
 		 */ 
-		public function valid()
+		public function valid(): bool
 		{
 			if ($this -> Error)
 			{
@@ -253,7 +255,7 @@
 		 * Ostensibly should return the count of the contained items but this just returns the number
 		 * of rows read so far. It's not really correct but at least coherent.
 		 */
-		public function count()
+		public function count(): int
 		{
 			if ($this -> Error)
 			{
