@@ -156,7 +156,7 @@
 		 * Rewind the Iterator to the first element.
 		 * Similar to the reset() function for arrays in PHP
 		 */ 
-		public function rewind()
+		public function rewind(): void
 		{
 			fseek($this -> Handle, $this -> BOMLength);
 			$this -> CurrentRow = null;
@@ -169,6 +169,7 @@
 		 *
 		 * @return mixed current element from the collection
 		 */
+	    #[\ReturnTypeWillChange]
 		public function current()
 		{
 			if ($this -> Index == 0 && is_null($this -> CurrentRow))
@@ -183,7 +184,7 @@
 		 * Move forward to next element. 
 		 * Similar to the next() function for arrays in PHP 
 		 */ 
-		public function next()
+		public function next(): void
 		{
 			$this -> CurrentRow = array();
 
@@ -238,8 +239,6 @@
 
 				}
 			}
-
-			return $this -> CurrentRow;
 		}
 
 		/** 
@@ -248,7 +247,8 @@
 		 *
 		 * @return mixed either an integer or a string
 		 */ 
-		public function key()
+	    #[\ReturnTypeWillChange]
+		public function key(): mixed
 		{
 			return $this -> Index;
 		}
@@ -259,7 +259,7 @@
 		 *
 		 * @return boolean FALSE if there's nothing more to iterate over
 		 */ 
-		public function valid()
+		public function valid(): bool
 		{
 			return ($this -> CurrentRow || !feof($this -> Handle));
 		}
@@ -269,7 +269,7 @@
 		 * Ostensibly should return the count of the contained items but this just returns the number
 		 * of rows read so far. It's not really correct but at least coherent.
 		 */
-		public function count()
+		public function count(): int
 		{
 			return $this -> Index + 1;
 		}
